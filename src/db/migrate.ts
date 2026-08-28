@@ -16,7 +16,7 @@ import { sql } from "drizzle-orm";
  * once and stamps the new version. Existing DBs self-heal on the first
  * request after a deploy — no manual action needed.
  */
-const SCHEMA_VERSION = "2026-08-25-1";
+const SCHEMA_VERSION = "2026-08-27-split-billing";
 
 /**
  * UNIVERSAL self-healing schema manager — works on ANY Postgres database
@@ -228,9 +228,59 @@ const RMS_CREATES: Array<[string, string]> = [
       created_at timestamp DEFAULT now()
     )`,
   ],
+  [
+    // Service calls: a guest taps "Need waiter / Bill please" on the QR page
+    // and it surfaces on the waiter screen as a priority queue.
+    "service_calls",
+    `CREATE TABLE IF NOT EXISTS service_calls (
+      id serial PRIMARY KEY,
+      table_id integer NOT NULL,
+      table_name text DEFAULT '',
+      kind text DEFAULT 'waiter',
+      note text,
+      status text DEFAULT 'new',
+      created_at timestamp DEFAULT now(),
+      ack_by text
+    )`,
+  ],
+  [
+    // Cultural Content Manager: owner-edited experiences / packages / stories.
+    "cultural_content",
+    `CREATE TABLE IF NOT EXISTS cultural_content (
+      id serial PRIMARY KEY,
+      kind text DEFAULT 'experience',
+      data text DEFAULT '{}',
+      image_url text,
+      status text DEFAULT 'published',
+      sort_order integer DEFAULT 0,
+      active boolean DEFAULT true,
+      created_at timestamp DEFAULT now(),
+      updated_at timestamp DEFAULT now()
+    )`,
+  ],
+  [
+    // Split Billing: settlement-only payment records against a single ticket.
+    "ticket_payments",
+    `CREATE TABLE IF NOT EXISTS ticket_payments (
+      id serial PRIMARY KEY,
+      ticket_id integer NOT NULL,
+      amount integer NOT NULL,
+      method text DEFAULT 'cash',
+      receipt_image text,
+      reference text,
+      status text DEFAULT 'active',
+      recorded_by text,
+      idempotency_key text,
+      created_at timestamp DEFAULT now()
+    )`,
+  ],
 ];
 
 const RMS_COLUMNS: Record<string, Record<string, ColSpec>> = {
+  cultural_content: {
+    image_url: { type: "text", dropNotNull: true },
+    status: { type: "text", def: "'published'" },
+  },
   staff_users: {
     name: { type: "text", def: "'Staff'" },
     role: { type: "text", def: "'waiter'" },
@@ -528,6 +578,9 @@ async function runFullMigrate(force: boolean) {
   await run(`CREATE INDEX IF NOT EXISTS tickets_created_at_idx ON tickets (created_at)`);
   await run(`CREATE INDEX IF NOT EXISTS tickets_updated_at_idx ON tickets (updated_at)`);
   await run(`CREATE INDEX IF NOT EXISTS tickets_status_closed_at_idx ON tickets (status, closed_at)`);
+  // Split Billing: one payment per (ticket, idempotency key); fast per-ticket reads.
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS ticket_payments_idempotency_key_key ON ticket_payments (ticket_id, idempotency_key) WHERE idempotency_key IS NOT NULL`);
+  await run(`CREATE INDEX IF NOT EXISTS ticket_payments_ticket_id_idx ON ticket_payments (ticket_id)`);
 
   //  • payment_status backfill: existing paid/completed bills get a concrete
   //    status derived from their stored method so reports/history stay correct

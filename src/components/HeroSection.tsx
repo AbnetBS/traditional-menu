@@ -1,147 +1,195 @@
 "use client";
 
-import { Coffee, Calendar, Utensils, Star, MapPin, Clock, ArrowRight, Sparkles } from "lucide-react";
-import { SiteSettings } from "@/types";
-import { useT, useAutoT } from "@/lib/i18n";
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  HERO — "WELCOME TO THE TABLE"
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  The first screen is not "Welcome, view our menu". It is an invitation to a
+ *  table. The Amharic line leads — ወደ ህላዊ ዕም እንን በደህና መጡ — with the
+ *  English beneath it, because this venue reads Amharic-first to a local and
+ *  is a postcard to a tourist. Either way, one verb: "Explore the Feast".
+ *
+ *  The composition is deliberately a hall at night, not a café: mesob platter
+ *  imagery, jebena, lantern light, and a single warm accent (terracotta).
+ */
+
+import { Utensils, Calendar, ChevronRight, Star, Clock, Music } from "lucide-react";
+import { RESTAURANT, isOpenNow } from "@/lib/restaurant";
+import { useLang } from "@/lib/i18n";
+import { TibebBand, FlagRibbon } from "@/components/cultural/Patterns";
 
 interface HeroProps {
-  settings: SiteSettings;
   onOpenMenu: () => void;
-  onOpenLocation: () => void;
+  onOpenSection: (id: string) => void;
 }
 
-export default function HeroSection({ settings, onOpenMenu, onOpenLocation }: HeroProps) {
-  const t = useT();
-  const tx = useAutoT();
-  const title = settings.hero_title || "Where Great Coffee Meets Beautiful Moments";
-  const subtitle =
-    settings.hero_subtitle ||
-    "A cozy café and restaurant located at Town Square Building, 22 Square (Djibouti Street, Bole, Addis Ababa). Designed for coffee lovers, food enthusiasts, families, and friends.";
-  const heroBgImage =
-    settings.hero_bg_image ||
-    "https://images.pexels.com/photos/16563658/pexels-photo-16563658.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=1200";
-  const openingHours = settings.opening_hours || "Open Daily Until 8:30 PM";
+export default function HeroSection({ onOpenMenu, onOpenSection }: HeroProps) {
+  const [lang] = useLang();
+  const am = lang === "am";
+  const { identity, contact } = RESTAURANT;
+
+  const rating = contact.googleRating;
+  const reviewCount = contact.googleReviewCount;
 
   return (
-    <section id="hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden py-16 lg:py-24 bg-[#2C1B17]">
-      {/* Background Image with Gradient Overlays */}
-      <div className="absolute inset-0 z-0">
+    <section
+      id="hero"
+      className="relative flex min-h-[100svh] items-center overflow-hidden bg-obsidian"
+    >
+      {/* ── Background: the hall itself ─────────────────────────────────── */}
+      <div className="absolute inset-0" aria-hidden="true">
         <img
-          src={heroBgImage}
-          alt="Fana Cafe Interior Ambience"
-          className="w-full h-full object-cover object-center opacity-40 scale-105 transform hover:scale-100 transition-transform duration-1000 ease-out"
+          src="/images/hero-hall.jpg"
+          alt=""
+          className="h-full w-full object-cover object-center opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#2C1B17] via-[#2C1B17]/75 to-black/40" />
-        <div className="absolute inset-0 bg-radial-gradient from-amber-500/10 via-transparent to-transparent" />
+        {/* Warm scrim so the type always sits on darkness. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/70 to-night/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-night/80 via-transparent to-night/40" />
       </div>
 
-      {/* Decorative Floating Lights / Steam Elements */}
-      <div className="absolute top-1/4 left-10 w-72 h-72 bg-[#C9A227]/10 rounded-full blur-3xl pointer-events-none animate-ambient-pulse" />
-      <div className="absolute bottom-1/3 right-10 w-96 h-96 bg-[#4E342E]/40 rounded-full blur-3xl pointer-events-none" />
+      {/* A single ember of light, bottom-left, like a coal brazier. */}
+      <div
+        className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-terracotta/20 blur-[120px] animate-ambient-pulse"
+        aria-hidden="true"
+      />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-        
-        {/* Status Pills */}
-        <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md border border-[#C9A227]/40 px-4 py-2 rounded-full mb-8 shadow-xl text-xs sm:text-sm">
-          <span className="flex items-center gap-1.5 font-bold text-amber-300">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+      {/* Top tibeb edge — the embroidered border frames the whole hall. */}
+      <div className="absolute inset-x-0 top-0 z-10 text-gold/55" aria-hidden="true">
+        <TibebBand />
+      </div>
+
+      {/* ── Content ─────────────────────────────────────────────────────── */}
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          {/* Live status + location strip */}
+          <div className="animate-hall-fade mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-night/60 px-3.5 py-1.5 font-semibold text-ivory backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                {isOpenNow() && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-flag-green opacity-70" />
+                )}
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-flag-green" />
+              </span>
+              {am ? contact.hoursNoteAm : contact.hoursNote}
             </span>
-            {t("hero_open_daily")}
-          </span>
-          <span className="text-amber-200/50">•</span>
-          <span className="flex items-center gap-1 text-stone-200">
-            <Clock className="w-3.5 h-3.5 text-[#C9A227]" />
-            {tx(openingHours)}
-          </span>
-          <span className="hidden sm:inline text-amber-200/50">•</span>
-          <span className="hidden sm:flex items-center gap-1 text-stone-200">
-            <MapPin className="w-3.5 h-3.5 text-[#C9A227]" />
-            22 Square, Town Square Bldg
-          </span>
-        </div>
+            <span className="inline-flex items-center gap-1.5 text-ivory-dim">
+              <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+              <span className="font-semibold text-ivory">{rating}</span>
+              <span>({reviewCount} {am ? "ግምገማዎች" : "reviews"})</span>
+            </span>
+            <span className="hidden sm:inline text-ivory-dim">·</span>
+            <span className="hidden sm:inline text-ivory-dim">{am ? contact.addressAm : contact.address}</span>
+          </div>
 
-        {/* Main Title */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-black tracking-tight leading-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-[#F4E8C1] to-amber-200 max-w-4xl mx-auto drop-shadow-md">
-          {tx(title)}
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mt-6 text-base sm:text-xl text-stone-200 max-w-2xl mx-auto leading-relaxed font-light drop-shadow">
-          {tx(subtitle)}
-        </p>
-
-        {/* Action Call to Action Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-          <a
-            href="#menu"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenMenu();
-            }}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#C9A227] to-[#B8921F] hover:from-[#d6ad2a] hover:to-[#c29b21] text-[#2C1B17] font-extrabold text-sm uppercase tracking-wider px-8 py-4 rounded-full shadow-xl hover:shadow-amber-500/20 hover:scale-105 transition duration-200"
+          {/* The Amharic line leads. */}
+          <p
+            className="animate-hall-fade text-2xl leading-relaxed text-gold-lit sm:text-3xl"
+            style={{ animationDelay: "80ms" }}
           >
-            <Utensils className="w-4 h-4" />
-            <span>{t("hero_cta_menu")}</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
+            {am ? identity.nameAm : "ወደ ባህላዊ ጣዕም እንኳን በደህና መጡ"}
+          </p>
 
-          <button
-            onClick={onOpenLocation}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-sm uppercase tracking-wider px-8 py-4 rounded-full border border-amber-400/30 backdrop-blur-md transition hover:scale-105"
+          <h1
+            className="animate-hall-fade mt-3 font-display text-5xl font-bold leading-[1.05] tracking-tight text-ivory sm:text-7xl"
+            style={{ animationDelay: "140ms" }}
           >
-            <MapPin className="w-4 h-4 text-[#C9A227]" />
-            <span>{t("hero_cta_location")}</span>
-          </button>
+            {am
+              ? "Welcome to the Table"
+              : "Welcome to the Table"}
+          </h1>
+
+          <p
+            className="animate-hall-fade mt-5 max-w-xl text-base leading-relaxed text-ivory-dim sm:text-lg"
+            style={{ animationDelay: "200ms" }}
+          >
+            {am ? identity.taglineAm : identity.tagline}
+          </p>
+
+          {/* Primary + secondary actions */}
+          <div
+            className="animate-hall-fade mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+            style={{ animationDelay: "260ms" }}
+          >
+            <button
+              type="button"
+              onClick={onOpenMenu}
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-terracotta px-8 py-4 text-sm font-bold uppercase tracking-wider text-ivory shadow-[var(--shadow-ember)] transition hover:bg-terracotta-lit hover:scale-[1.02]"
+            >
+              <Utensils className="h-4 w-4" />
+              {am ? "ድግሱን ያስሱ" : "Explore the Feast"}
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onOpenSection("tonight")}
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-gold/40 bg-night/50 px-8 py-4 text-sm font-bold uppercase tracking-wider text-gold backdrop-blur-sm transition hover:border-gold hover:text-gold-lit"
+            >
+              <Music className="h-4 w-4" />
+              {am ? "ዛሬ ሽት" : "Tonight"}
+            </button>
+          </div>
+
+          {/* Section shortcuts: Menu | Experience | Tonight | Our Story */}
+          <nav
+            aria-label="Primary"
+            className="animate-hall-fade mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-ivory-dim"
+            style={{ animationDelay: "320ms" }}
+          >
+            {[
+              { id: "menu", en: "Menu", am: "ምናሌ" },
+              { id: "feast", en: "Experience", am: "ተሞክሮ" },
+              { id: "tonight", en: "Tonight", am: "ዛሬ ሽት" },
+              { id: "story", en: "Our Story", am: "ታሪካችን" },
+            ].map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => onOpenSection(s.id)}
+                className="group inline-flex items-center gap-2 transition hover:text-gold"
+              >
+                {i > 0 && <span className="text-gold/40">/</span>}
+                <span className="underline-offset-4 group-hover:underline">{am ? s.am : s.en}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Identity row: name + etymology + the flag ribbon (the only one). */}
+          <div
+            className="animate-hall-fade mt-12 flex flex-wrap items-center gap-4 text-xs text-ivory-dim"
+            style={{ animationDelay: "380ms" }}
+          >
+            <FlagRibbon />
+            <span className="font-semibold tracking-[0.2em] uppercase text-ivory">
+              {identity.shortName}
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>{am ? identity.nameOrigin.textAm : identity.nameOrigin.text}</span>
+          </div>
         </div>
-
-        {/* Highlights Bar */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 text-left max-w-4xl mx-auto">
-          
-          <div className="bg-[#3D2314]/80 backdrop-blur-md p-4 rounded-2xl border border-[#C9A227]/30 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C9A227]/20 flex items-center justify-center text-[#C9A227] shrink-0">
-              <Coffee className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 font-medium">{t("hero_hl_brews")}</p>
-              <p className="text-sm font-bold text-stone-100">{t("hero_hl_macchiato")}</p>
-            </div>
-          </div>
-
-          <div className="bg-[#3D2314]/80 backdrop-blur-md p-4 rounded-2xl border border-[#C9A227]/30 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C9A227]/20 flex items-center justify-center text-[#C9A227] shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 font-medium">{t("hero_hl_juices")}</p>
-              <p className="text-sm font-bold text-stone-100">{t("hero_hl_spris")}</p>
-            </div>
-          </div>
-
-          <div className="bg-[#3D2314]/80 backdrop-blur-md p-4 rounded-2xl border border-[#C9A227]/30 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C9A227]/20 flex items-center justify-center text-[#C9A227] shrink-0">
-              <Utensils className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 font-medium">{t("hero_hl_dining")}</p>
-              <p className="text-sm font-bold text-stone-100">{t("hero_hl_sandwich")}</p>
-            </div>
-          </div>
-
-          <div className="bg-[#3D2314]/80 backdrop-blur-md p-4 rounded-2xl border border-[#C9A227]/30 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C9A227]/20 flex items-center justify-center text-[#C9A227] shrink-0">
-              <Star className="w-5 h-5 fill-[#C9A227] text-[#C9A227]" />
-            </div>
-            <div>
-              <p className="text-xs text-stone-400 font-medium">{t("hero_hl_reviews")}</p>
-              <p className="text-sm font-bold text-stone-100">3.7 ★ (28 Reviews)</p>
-            </div>
-          </div>
-
-        </div>
-
       </div>
+
+      {/* Scroll cue */}
+      <button
+        type="button"
+        onClick={() => onOpenSection("menu")}
+        className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-gold/70 transition hover:text-gold"
+        aria-label={am ? "ወደ ናሌ ሸብልሉ" : "Scroll to the menu"}
+      >
+        <span className="block h-10 w-6 rounded-full border border-gold/40 p-1">
+          <span className="mx-auto block h-2 w-1 animate-bounce rounded-full bg-gold/70" />
+        </span>
+      </button>
+
+      {/* Clock in the corner — Totot never sleeps, and neither does the guest. */}
+      <div className="absolute right-4 top-6 z-10 hidden items-center gap-2 text-xs text-ivory-dim sm:flex">
+        <Clock className="h-3.5 w-3.5 text-gold" />
+        <span>{am ? contact.hoursNoteAm : contact.hoursNote}</span>
+      </div>
+
+      {/* Reserve anchor target lives on the next section; this stays here. */}
+      <div id="reserve" className="sr-only" />
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { menuItems, galleryItems, announcements, tickets, siteSettings } from "@/db/schema";
+import { menuItems, galleryItems, announcements, tickets, siteSettings, culturalContent } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { extractCdnImageId, cdnImageUrl, isInlineDataUrl } from "@/lib/image-ref";
 
@@ -67,15 +67,17 @@ export async function persistImageRef(ref: string | null | undefined, client: an
  * an image reference. A row is orphaned only when this returns 0.
  */
 async function countReferences(ref: string): Promise<number> {
-  const [menu, gallery, anns, tk, settings] = await Promise.all([
+  const [menu, gallery, anns, tk, settings, cultural] = await Promise.all([
     db.select({ id: menuItems.id }).from(menuItems).where(eq(menuItems.imageUrl, ref)),
     db.select({ id: galleryItems.id }).from(galleryItems).where(eq(galleryItems.imageUrl, ref)),
     db.select({ id: announcements.id }).from(announcements).where(eq(announcements.imageUrl, ref)),
     db.select({ id: tickets.id }).from(tickets).where(eq(tickets.receiptImage, ref)),
     // Any settings value that equals the URL (logo_url, hero_bg_image, …).
     db.select({ key: siteSettings.key }).from(siteSettings).where(eq(siteSettings.value, ref)),
+    // Cultural Content Manager images (experiences / packages / stories / specials).
+    db.select({ id: culturalContent.id }).from(culturalContent).where(eq(culturalContent.imageUrl, ref)),
   ]);
-  return menu.length + gallery.length + anns.length + tk.length + settings.length;
+  return menu.length + gallery.length + anns.length + tk.length + settings.length + cultural.length;
 }
 
 /**

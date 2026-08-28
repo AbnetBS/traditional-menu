@@ -3,16 +3,21 @@
 import { useState } from "react";
 import {
   Settings, Utensils, Star, Lock, Plus, Trash2, Edit3, CheckCircle2, Save, LogOut, RefreshCw,
-  Eye, EyeOff, Upload, Image as ImageIcon, Camera, TrendingUp, Users, QrCode, CreditCard,
+  Eye, EyeOff, Upload, Image as ImageIcon, Camera, TrendingUp, Users, QrCode, CreditCard, Sparkles, Flame, HeartPulse, LineChart,
 } from "lucide-react";
 import { MenuItem, SiteSettings, Review, Category, GalleryItem } from "@/types";
 import { compressImage } from "@/lib/image-utils";
+import { RESTAURANT } from "@/lib/restaurant";
 import ReportsTab from "@/components/rms/ReportsTab";
 import StaffTab from "@/components/rms/StaffTab";
 import TablesQrTab from "@/components/rms/TablesQrTab";
 import OrderHistoryTab from "@/components/rms/OrderHistoryTab";
 import DailyBoardTab from "@/components/rms/DailyBoardTab";
 import StationsTab from "@/components/rms/StationsTab";
+import CulturalAdminTab from "@/components/rms/CulturalAdminTab";
+import RushModeTab from "@/components/rms/RushModeTab";
+import OrderHealthTab from "@/components/rms/OrderHealthTab";
+import RevenueIntelligenceTab from "@/components/rms/RevenueIntelligenceTab";
 
 interface AdminPanelProps {
   settings: SiteSettings;
@@ -24,7 +29,7 @@ interface AdminPanelProps {
   onLogout: () => void;
 }
 
-type Tab = "reports" | "menu" | "board" | "stations" | "tables" | "staff" | "gallery" | "reviews" | "history" | "settings" | "security";
+type Tab = "reports" | "rush" | "health" | "revenue" | "menu" | "board" | "cultural" | "stations" | "tables" | "staff" | "gallery" | "reviews" | "history" | "settings" | "security";
 
 export default function AdminPanel({
   settings,
@@ -191,8 +196,12 @@ export default function AdminPanel({
 
   const tabs: Array<{ key: Tab; label: string; icon: React.ReactNode }> = [
     { key: "reports", label: "Reports", icon: <TrendingUp className="w-4 h-4" /> },
+    { key: "rush", label: "Rush Mode", icon: <Flame className="w-4 h-4" /> },
+    { key: "health", label: "Order Health", icon: <HeartPulse className="w-4 h-4" /> },
+    { key: "revenue", label: "Revenue Intel", icon: <LineChart className="w-4 h-4" /> },
     { key: "menu", label: `Menu (${menuItems.length})`, icon: <Utensils className="w-4 h-4" /> },
     { key: "board", label: "Daily Board", icon: <TrendingUp className="w-4 h-4" /> },
+    { key: "cultural", label: "Cultural", icon: <Sparkles className="w-4 h-4" /> },
     { key: "stations", label: "Stations", icon: <Users className="w-4 h-4" /> },
     { key: "tables", label: "Tables & QR", icon: <QrCode className="w-4 h-4" /> },
     { key: "staff", label: "Staff", icon: <Users className="w-4 h-4" /> },
@@ -212,8 +221,8 @@ export default function AdminPanel({
             <Lock className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-serif font-black text-2xl text-amber-100">Fana Cafe — Owner Dashboard</h1>
-            <p className="text-xs text-amber-200/70">Menu, tables, staff, reports, reviews & business info — all under your control</p>
+            <h1 className="font-serif font-black text-2xl text-amber-100">{RESTAURANT.identity.shortName} — Owner Dashboard</h1>
+            <p className="text-xs text-amber-200/70">Menu, tables, staff, reports, cultural programme & business info — all under your control</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -249,8 +258,20 @@ export default function AdminPanel({
         {/* REPORTS */}
         {activeTab === "reports" && <ReportsTab />}
 
+        {/* RUSH MODE */}
+        {activeTab === "rush" && <RushModeTab />}
+
+        {/* ORDER HEALTH */}
+        {activeTab === "health" && <OrderHealthTab />}
+
+        {/* REVENUE INTELLIGENCE */}
+        {activeTab === "revenue" && <RevenueIntelligenceTab />}
+
         {/* DAILY BOARD */}
         {activeTab === "board" && <DailyBoardTab />}
+
+        {/* CULTURAL CONTENT MANAGER */}
+        {activeTab === "cultural" && <CulturalAdminTab />}
 
         {/* STATIONS */}
         {activeTab === "stations" && <StationsTab />}

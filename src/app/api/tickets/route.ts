@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { tickets, ticketItems, cafeTables, menuItems } from "@/db/schema";
+import { tickets, ticketItems, cafeTables, menuItems, ticketPayments } from "@/db/schema";
+import { computeBalance } from "@/lib/split-billing";
 import { ensureTablesExist } from "@/db/migrate";
 import { DEFAULT_CATEGORY_ROUTING } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
@@ -92,11 +93,30 @@ export async function GET(request: Request) {
       itemsByTicket.get(it.ticketId)!.push(it);
     }
 
-    const result = slim.map((t) => ({
-      ...t,
-      receiptImage: null, // keep field defined so clients know it needs fetching on demand
-      items: itemsByTicket.get((t as { id: number }).id) || [],
-    }));
+    // Split Billing: attach each ticket's payment records + server-computed
+    // paid/remaining in ONE batched query (no N+1). Old tickets simply have [].
+    const payments = needItems && ticketIds.length > 0
+      ? await db.select().from(ticketPayments).where(inArray(ticketPayments.ticketId, ticketIds))
+      : [];
+    const paymentsByTicket = new Map<number, typeof payments>();
+    for (const p of payments) {
+      if (!paymentsByTicket.has(p.ticketId)) paymentsByTicket.set(p.ticketId, []);
+      paymentsByTicket.get(p.ticketId)!.push(p);
+    }
+
+    const result = slim.map((t) => {
+      const id = (t as { id: number }).id;
+      const pays = paymentsByTicket.get(id) || [];
+      const bal = computeBalance((t as { totalAmount: number }).totalAmount ?? 0, pays);
+      return {
+        ...t,
+        receiptImage: null, // keep field defined so clients know it needs fetching on demand
+        items: itemsByTicket.get(id) || [],
+        payments: pays,
+        paidAmount: bal.paid,
+        remainingAmount: bal.remaining,
+      };
+    });
 
     return NextResponse.json(result);
   } catch (error) {
@@ -366,6 +386,24 @@ export async function PUT(request: Request) {
           { error: `Cannot change order status from "${cur.status}" to "${body.status}"` },
           { status: 400 }
         );
+      }
+    }
+
+    // Split Billing safety: a ticket that already has settlement records may
+    // only reach `paid` when its remaining balance is zero (settlement closes
+    // it). The generic status flip must NOT discard an outstanding balance.
+    // Legacy tickets (no payments) are unaffected.
+    if (body.status === "paid" && cur.status !== "paid") {
+      const pays = await db.select().from(ticketPayments).where(eq(ticketPayments.ticketId, cur.id));
+      const activePays = pays.filter((p) => p.status !== "void");
+      if (activePays.length > 0) {
+        const bal = computeBalance(cur.totalAmount ?? 0, pays);
+        if (bal.remaining > 0) {
+          return NextResponse.json(
+            { error: `Remaining balance of ${bal.remaining} ETB must be settled via payments first.` },
+            { status: 400 }
+          );
+        }
       }
     }
 

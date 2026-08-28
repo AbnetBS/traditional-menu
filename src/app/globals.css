@@ -1,95 +1,358 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOTOT — "MODERN ETHIOPIAN HERITAGE" DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════
+   80% modern premium UI · 20% Ethiopian cultural identity.
+
+   The room is a cultural hall at night: obsidian walls, coffee-brown timber,
+   clay-red pots, woven gold. The national colours exist — but only as small
+   accents, never as the palette. That is the line between "premium heritage"
+   and "tourist brochure", and this file enforces it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Earth ────────────────────────────────────────────────────────────── */
+  --color-obsidian: #171411;   /* page background — the hall at night      */
+  --color-night: #0f0d0b;      /* deeper: footer, hero scrim, modals       */
+  --color-coffee: #4a3025;     /* cards, secondary surfaces                */
+  --color-coffee-soft: #2a1e18;/* elevated surface on obsidian             */
+  --color-ivory: #f4ebdd;      /* text on dark / background on light       */
+  --color-ivory-dim: #ded2bd;  /* secondary text on dark                   */
+  --color-terracotta: #9a4e32; /* clay red — primary action                */
+  --color-terracotta-lit: #b8603d;
+  --color-gold: #b8955a;       /* woven gold — hairlines, prices, active   */
+  --color-gold-lit: #d6b379;
+
+  /* ── National colours, tiny accents only ──────────────────────────────── */
+  --color-flag-green: #2e7d4f;
+  --color-flag-yellow: #e4b33b;
+  --color-flag-red: #c0392b;
+
+  /* ── Semantic ─────────────────────────────────────────────────────────── */
+  --color-ontime: #4e9a6b;
+  --color-getting-late: #d8a13a;
+  --color-delayed: #c0483a;
+
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  /* Amharic is never an afterthought: Ethiopic faces carry real weight.     */
+  --font-display: "Playfair Display", "Noto Serif Ethiopic", Georgia, serif;
+  --font-ethiopic: "Noto Sans Ethiopic", "Noto Serif Ethiopic", "Nyala", sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", sans-serif;
+
+  /* ── Shape & depth ────────────────────────────────────────────────────── */
+  --radius-card: 1.25rem;
+  --shadow-hall: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
+  --shadow-ember: 0 0 0 1px rgba(184, 149, 90, 0.22),
+    0 18px 40px -18px rgba(154, 78, 50, 0.55);
+}
+
 @layer base {
   :root {
-    --color-coffee-dark: #2C1B17;
-    --color-coffee-main: #4E342E;
-    --color-coffee-light: #6D4C41;
-    --color-cream-bg: #FAF6F0;
-    --color-cream-card: #FFFFFF;
-    --color-gold-main: #C9A227;
-    --color-gold-hover: #B8921F;
-    --color-gold-light: #F4E8C1;
-    --color-forest-green: #2E5E4E;
+    /* Legacy tokens kept so untouched Fana-era components still render. */
+    --color-coffee-dark: #2c1b17;
+    --color-coffee-main: #4a3025;
+    --color-coffee-light: #6d4c41;
+    --color-cream-bg: #f4ebdd;
+    --color-cream-card: #ffffff;
+    --color-gold-main: #b8955a;
+    --color-gold-hover: #a07f47;
+    --color-gold-light: #f0e4cd;
+    --color-forest-green: #2e5e4e;
   }
 
   html {
     scroll-behavior: smooth;
-    background-color: var(--color-cream-bg);
-    color: #2C1B17;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--color-obsidian);
+    color: var(--color-ivory);
+    font-family: var(--font-body);
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Custom scrollbar */
+  body {
+    background-color: var(--color-obsidian);
+    color: var(--color-ivory);
+  }
+
+  /* Ethiopic script needs a little more leading to breathe. */
+  [lang="am"],
+  .font-ethiopic {
+    font-family: var(--font-ethiopic);
+    line-height: 1.85;
+    letter-spacing: 0.01em;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #FAF6F0;
+    background: var(--color-night);
   }
   ::-webkit-scrollbar-thumb {
-    background: #C9A227;
+    background: var(--color-coffee);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #4E342E;
+    background: var(--color-gold);
+  }
+
+  ::selection {
+    background: var(--color-gold);
+    color: var(--color-obsidian);
   }
 }
 
-/* Glassmorphism utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(201, 162, 39, 0.18);
+/* ═══════════════════════════════════════════════════════════════════════════
+   WOVEN PATTERN PRIMITIVES
+   Inline SVG — zero network requests, zero image assets, crisp at any DPR.
+   Opacity is deliberately low: texture, not decoration.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tibeb — the embroidered border band of a netela / habesha kemis. */
+.pattern-tibeb {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Cpath d='M0 8h32' stroke='%23B8955A' stroke-width='1' opacity='.55'/%3E%3Cpath d='M8 2.5 14 8l-6 5.5L2 8z' fill='none' stroke='%239A4E32' stroke-width='1.1'/%3E%3Cpath d='M24 2.5 30 8l-6 5.5L18 8z' fill='none' stroke='%239A4E32' stroke-width='1.1'/%3E%3Cpath d='M16 3.5v9M12 8h8' stroke='%23B8955A' stroke-width='1.1' opacity='.8'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-size: 32px 16px;
 }
 
-.glass-dark {
-  background: rgba(44, 27, 23, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(201, 162, 39, 0.25);
+/* Weave — a diamond lattice, used as a faint section background. */
+.pattern-weave {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M24 2 46 24 24 46 2 24z' fill='none' stroke='%23B8955A' stroke-width='.8' opacity='.16'/%3E%3Cpath d='M24 14 34 24 24 34 14 24z' fill='none' stroke='%239A4E32' stroke-width='.7' opacity='.14'/%3E%3Ccircle cx='24' cy='24' r='1.4' fill='%23B8955A' opacity='.18'/%3E%3C/svg%3E");
+  background-size: 48px 48px;
 }
 
-.gold-glow {
-  box-shadow: 0 0 25px rgba(201, 162, 39, 0.3);
+/* Mesob — concentric woven rings, the gathering symbol. Used behind heroes. */
+.pattern-mesob {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23B8955A' stroke-width='.9' opacity='.2'%3E%3Ccircle cx='60' cy='60' r='56'/%3E%3Ccircle cx='60' cy='60' r='42'/%3E%3Ccircle cx='60' cy='60' r='28'/%3E%3Ccircle cx='60' cy='60' r='14'/%3E%3C/g%3E%3Cg stroke='%239A4E32' stroke-width='.8' opacity='.16'%3E%3Cpath d='M60 4v112M4 60h112M20 20l80 80M100 20 20 100'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
-.gold-glow-sm {
-  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+/* Injera — the porous, airy crumb of the flatbread itself. */
+.pattern-injera {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='%23B8955A'%3E%3Ccircle cx='9' cy='11' r='1.5' opacity='.14'/%3E%3Ccircle cx='31' cy='6' r='1' opacity='.11'/%3E%3Ccircle cx='55' cy='15' r='1.7' opacity='.13'/%3E%3Ccircle cx='18' cy='34' r='1.1' opacity='.12'/%3E%3Ccircle cx='44' cy='30' r='1.5' opacity='.15'/%3E%3Ccircle cx='66' cy='41' r='1.2' opacity='.11'/%3E%3Ccircle cx='7' cy='56' r='1.4' opacity='.13'/%3E%3Ccircle cx='28' cy='63' r='1' opacity='.1'/%3E%3Ccircle cx='52' cy='58' r='1.6' opacity='.14'/%3E%3Ccircle cx='68' cy='68' r='1' opacity='.11'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 72px 72px;
 }
 
-/* Steam animation for coffee cups */
+/* ═══════════════════════════════════════════════════════════════════════════
+   SURFACES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A card sitting in the dark hall. */
+.hall-card {
+  background: linear-gradient(
+    180deg,
+    rgba(74, 48, 37, 0.55) 0%,
+    rgba(23, 20, 17, 0.82) 100%
+  );
+  border: 1px solid rgba(184, 149, 90, 0.2);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-hall);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* A raised, lit surface — used for the primary "tonight" surfaces. */
+.ember-card {
+  background: linear-gradient(
+    150deg,
+    rgba(154, 78, 50, 0.28) 0%,
+    rgba(74, 48, 37, 0.6) 45%,
+    rgba(23, 20, 17, 0.9) 100%
+  );
+  border: 1px solid rgba(184, 149, 90, 0.32);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-ember);
+}
+
+/* Cream surface for the rare light sections (print receipts, forms). */
+.parchment {
+  background: var(--color-ivory);
+  color: var(--color-obsidian);
+}
+
+/* Gold hairline rule with a woven diamond in the middle. */
+.rule-woven {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  color: var(--color-gold);
+}
+.rule-woven::before,
+.rule-woven::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(184, 149, 90, 0.55),
+    transparent
+  );
+}
+
+/* Small caps eyebrow used above every section title. */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-gold);
+}
+
+/* Gold text that reads as engraved metal, not as a bright yellow. */
+.text-engraved {
+  background: linear-gradient(
+    180deg,
+    var(--color-gold-lit) 0%,
+    var(--color-gold) 55%,
+    #8c6d3c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOTION — ceremonial and calm. Warm fades and slow reveals only.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes hallFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-hall-fade {
+  animation: hallFadeUp 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Pattern reveal: a woven motif drawing itself into view. */
+@keyframes weaveReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.94) rotate(-1.5deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.animate-weave {
+  animation: weaveReveal 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Coffee steam rising from the jebena. */
 @keyframes steam {
   0% {
     transform: translateY(0) scaleX(1);
     opacity: 0;
   }
-  50% {
-    opacity: 0.6;
+  45% {
+    opacity: 0.55;
   }
   100% {
-    transform: translateY(-16px) scaleX(1.3);
+    transform: translateY(-18px) scaleX(1.35);
     opacity: 0;
   }
 }
-
 .animate-steam {
-  animation: steam 2.5s infinite ease-out;
+  animation: steam 3.2s infinite ease-out;
 }
 
-/* Ambient Pulse */
+/* Embers drifting — the shekla tibs flame, the coal brazier. */
+@keyframes emberDrift {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-120px) translateX(14px);
+    opacity: 0;
+  }
+}
+.animate-ember {
+  animation: emberDrift 7s infinite ease-in;
+}
+
 @keyframes ambientPulse {
-  0%, 100% {
-    opacity: 0.4;
+  0%,
+  100% {
+    opacity: 0.35;
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
-    transform: scale(1.05);
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}
+.animate-ambient-pulse {
+  animation: ambientPulse 7s infinite ease-in-out;
+}
+
+/* The "LIVE" pill on Tonight's programme. */
+@keyframes livePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(192, 57, 43, 0);
+  }
+}
+.animate-live {
+  animation: livePulse 2.2s infinite;
+}
+
+/* Legacy utility kept for older components. */
+.glass-panel {
+  background: rgba(244, 235, 221, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(184, 149, 90, 0.2);
+}
+.glass-dark {
+  background: rgba(15, 13, 11, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(184, 149, 90, 0.25);
+}
+.gold-glow {
+  box-shadow: 0 0 28px rgba(184, 149, 90, 0.28);
+}
+.gold-glow-sm {
+  box-shadow: 0 0 12px rgba(184, 149, 90, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hall-fade,
+  .animate-weave,
+  .animate-steam,
+  .animate-ember,
+  .animate-ambient-pulse,
+  .animate-live {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }
 
-.animate-ambient-pulse {
-  animation: ambientPulse 6s infinite ease-in-out;
+/* A cultural hall is loud and dark — never let contrast fall below readable. */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
