@@ -20,6 +20,13 @@ pass("same idempotency key w/ different payload rejected (not silently reused)",
 pass("transaction + row lock for concurrency", /db\.transaction/.test(route) && /FOR UPDATE/.test(route));
 pass("closes only at zero remaining", /bal\.remaining === 0/.test(route));
 pass("per-payment receipt persistence", /persistImageRef\(/.test(route));
+{
+  // GET must authorize BEFORE param validation so unauth probes get 401.
+  const g = route.indexOf("export async function GET");
+  const authAt = route.indexOf("readAdminSession", g);
+  const paramAt = route.indexOf("ticketId required", g);
+  pass("GET authorizes before param validation (401 for unauth probes)", g !== -1 && authAt !== -1 && paramAt !== -1 && authAt < paramAt);
+}
 
 const tickets = read("src/app/api/tickets/route.ts");
 pass("ticket reads expose paid/remaining + payments (no second representation)", /remainingAmount/.test(tickets) && /payments:/.test(tickets));

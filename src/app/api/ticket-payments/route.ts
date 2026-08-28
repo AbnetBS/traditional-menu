@@ -44,15 +44,15 @@ async function authorizeSettlement(): Promise<Auth> {
 }
 
 export async function GET(request: Request) {
+  // Authorization FIRST so unauthenticated probes always get 401 (never 400).
+  const admin = await readAdminSession();
+  const staff = await readStaffSession();
+  if (!admin && !staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const ticketId = Number(searchParams.get("ticketId") || 0);
   if (!Number.isInteger(ticketId) || ticketId <= 0)
     return NextResponse.json({ error: "ticketId required" }, { status: 400 });
-
-  // Reads are available to any authenticated staff member.
-  const admin = await readAdminSession();
-  const staff = await readStaffSession();
-  if (!admin && !staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     await ensureTablesExist();
