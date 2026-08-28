@@ -12,6 +12,9 @@ export const pool =
   new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 5000,
+    max: Math.max(1, Number(process.env.DB_POOL_MAX || 5)),
+    idleTimeoutMillis: Math.max(1000, Number(process.env.DB_POOL_IDLE_MS || 10000)),
+    allowExitOnIdle: true,
   });
 
 // Graceful error handling for connection issues
