@@ -59,6 +59,7 @@ export default function RushModeTab() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    if (typeof document !== "undefined" && document.hidden) return;
     try {
       const res = await fetch("/api/rush");
       if (res.ok) {
