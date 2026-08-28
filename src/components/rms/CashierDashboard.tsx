@@ -8,6 +8,8 @@ import {
 import { Ticket, TicketItem, CafeTable, StaffUser } from "@/types";
 import { triggerDesktopNotification } from "@/lib/notifications";
 import { unlockAudio, playDing } from "@/lib/sound";
+import { splitEven } from "@/lib/split-billing";
+import { compressImage } from "@/lib/image-utils";
 
 interface StaffLite {
   id: number;
@@ -27,6 +29,13 @@ export default function CashierDashboard() {
   const [history, setHistory] = useState<Ticket[]>([]);
   const [receiptModal, setReceiptModal] = useState<string | null>(null);
   const prevCountRef = useRef(0);
+
+  // ── SPLIT BILLING (settlement-only) per-ticket state ──
+  const [payAmount, setPayAmount] = useState<Record<number, string>>({});
+  const [payMethod, setPayMethod] = useState<Record<number, string>>({});
+  const [payReceipt, setPayReceipt] = useState<Record<number, string>>({});
+  const [payBusy, setPayBusy] = useState<Record<number, boolean>>({});
+  const [splitShares, setSplitShares] = useState<Record<number, number[]>>({});
 
   // ── CONNECTION INDICATOR (Group 3) ──
   // Reflects REAL backend communication (fetch success/failure), NOT the browser's
@@ -231,6 +240,52 @@ export default function CashierDashboard() {
       }),
     });
     loadAll();
+  };
+
+  /* ── SPLIT BILLING: record one settlement payment against the ticket. The
+     server is authoritative (balance, validation, close-at-zero); the UI only
+     sends amount + method + optional proof + an idempotency key. ── */
+  const addPayment = async (t: Ticket, overrideAmount?: number) => {
+    const remaining = t.remainingAmount ?? t.totalAmount;
+    const amt = overrideAmount ?? parseInt(payAmount[t.id] ?? String(remaining), 10);
+    const method = payMethod[t.id] || "cash";
+    if (!Number.isFinite(amt) || amt <= 0) { alert("Enter a positive whole amount."); return; }
+    setPayBusy((m) => ({ ...m, [t.id]: true }));
+    try {
+      const key = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      const r = await fetch("/api/ticket-payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketId: t.id,
+          amount: amt,
+          method,
+          receiptImage: payReceipt[t.id] || undefined,
+          idempotencyKey: key,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || "Payment failed."); }
+      else {
+        setPayAmount((m) => ({ ...m, [t.id]: "" }));
+        setPayReceipt((m) => ({ ...m, [t.id]: "" }));
+        setSplitShares((m) => ({ ...m, [t.id]: [] }));
+      }
+      loadAll();
+    } catch {
+      alert("Could not record payment.");
+    }
+    setPayBusy((m) => ({ ...m, [t.id]: false }));
+  };
+
+  const onPickPayReceipt = async (t: Ticket, file: File | null) => {
+    if (!file) return;
+    try {
+      const dataUrl = await compressImage(file, 700, 0.7);
+      setPayReceipt((m) => ({ ...m, [t.id]: dataUrl }));
+    } catch {
+      alert("Receipt image rejected.");
+    }
   };
 
   const cancelTicket = async (id: number) => {
@@ -551,6 +606,91 @@ export default function CashierDashboard() {
                       </div>
                     )}
 
+                    {/* ── SPLIT BILLING settlement panel ── */}
+                    {(t.status === "ready_for_payment" || t.status === "completed") && (
+                      <div className="bg-black/30 rounded-xl p-3 border border-[#C9A227]/30 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-stone-400">Total <b className="text-amber-100">{t.totalAmount}</b></span>
+                          <span className="text-stone-400">Paid <b className="text-emerald-400">{t.paidAmount ?? 0}</b></span>
+                          <span className="text-stone-400">Remaining <b className="text-rose-400">{t.remainingAmount ?? t.totalAmount}</b></span>
+                        </div>
+
+                        {(t.payments?.length ?? 0) > 0 && (
+                          <div className="space-y-1 border-t border-stone-800 pt-1.5">
+                            {t.payments!.map((p) => (
+                              <div key={p.id} className="flex justify-between text-[10px] text-stone-400">
+                                <span className="capitalize">{p.method}{p.status === "void" ? " (void)" : ""} · {p.recordedBy || "cashier"}</span>
+                                <span className="font-bold text-stone-300">{p.amount} ETB</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {(t.remainingAmount ?? t.totalAmount) > 0 && (
+                          <>
+                            <div className="flex gap-2">
+                              <input
+                                type="number" min={1}
+                                value={payAmount[t.id] ?? ""}
+                                placeholder={`Amount (≤ ${t.remainingAmount ?? t.totalAmount})`}
+                                onChange={(e) => setPayAmount((m) => ({ ...m, [t.id]: e.target.value }))}
+                                className="flex-1 bg-[#2C1B17] border border-stone-700 rounded-lg px-2 py-1.5 text-[11px] text-white"
+                              />
+                              <select
+                                value={payMethod[t.id] || "cash"}
+                                onChange={(e) => setPayMethod((m) => ({ ...m, [t.id]: e.target.value }))}
+                                className="bg-[#2C1B17] border border-stone-700 rounded-lg px-2 py-1.5 text-[11px] font-bold text-white"
+                              >
+                                {["cash", "telebirr", "cbe", "card", "online"].map((m) => <option key={m}>{m}</option>)}
+                              </select>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-sky-900/40 px-2 py-1.5 rounded-lg cursor-pointer">
+                                <ImageIcon className="w-3 h-3" /> {payReceipt[t.id] ? "Proof ✓" : "Add proof"}
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => onPickPayReceipt(t, e.target.files?.[0] ?? null)} />
+                              </label>
+                              <span className="text-[10px] text-stone-500">Split:</span>
+                              {[2, 3, 4].map((n) => (
+                                <button
+                                  key={n}
+                                  onClick={() => {
+                                    const shares = splitEven(t.remainingAmount ?? t.totalAmount, n);
+                                    setSplitShares((m) => ({ ...m, [t.id]: shares }));
+                                    setPayAmount((m) => ({ ...m, [t.id]: String(shares[0]) }));
+                                  }}
+                                  className="text-[10px] font-bold bg-white/10 px-2 py-1 rounded-lg"
+                                >
+                                  ÷{n}
+                                </button>
+                              ))}
+                            </div>
+
+                            {(splitShares[t.id]?.length ?? 0) > 0 && (
+                              <p className="text-[10px] text-stone-400">Suggested: {splitShares[t.id].join(" + ")} = {t.remainingAmount ?? t.totalAmount}</p>
+                            )}
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => addPayment(t)}
+                                disabled={payBusy[t.id]}
+                                className="flex-1 bg-[#C9A227] hover:bg-[#d6ad2a] text-[#2C1B17] text-xs font-black py-2 rounded-xl disabled:opacity-50"
+                              >
+                                + Add Payment
+                              </button>
+                              <button
+                                onClick={() => addPayment(t, t.remainingAmount ?? t.totalAmount)}
+                                disabled={payBusy[t.id]}
+                                className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black py-2 rounded-xl disabled:opacity-50"
+                              >
+                                Pay Remaining ({t.remainingAmount ?? t.totalAmount})
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     {/* actions per status */}
                     <div className="flex flex-wrap gap-2 pt-1">
                       {t.status === "pending_waiter" && (
@@ -576,10 +716,18 @@ export default function CashierDashboard() {
                           Preparing — waiter will request payment when customer finishes
                         </span>
                       )}
-                      {t.status === "completed" && (
+                      {/* Legacy full-payment path only when there are NO split
+                          settlement records; split tickets close automatically
+                          at zero remaining via /api/ticket-payments. */}
+                      {t.status === "completed" && (!t.payments || t.payments.length === 0) && (
                         <button onClick={() => markPaid(t)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-2">
                           <CheckCircle2 className="w-4 h-4" /> Mark PAID & Release Table
                         </button>
+                      )}
+                      {t.status === "completed" && (t.payments?.length ?? 0) > 0 && (t.remainingAmount ?? 0) > 0 && (
+                        <span className="flex-1 text-center text-[11px] text-amber-300 bg-amber-950/50 py-2.5 rounded-xl border border-amber-800">
+                          Partially settled — record remaining via payments above.
+                        </span>
                       )}
                       <button onClick={() => cancelTicket(t.id)} className="px-3 py-2.5 bg-rose-900/60 text-rose-300 text-xs font-bold rounded-xl hover:bg-rose-700 hover:text-white flex items-center gap-1">
                         <XCircle className="w-3.5 h-3.5" /> Cancel

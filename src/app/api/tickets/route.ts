@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { tickets, ticketItems, cafeTables, menuItems } from "@/db/schema";
+import { tickets, ticketItems, cafeTables, menuItems, ticketPayments } from "@/db/schema";
+import { computeBalance } from "@/lib/split-billing";
 import { ensureTablesExist } from "@/db/migrate";
 import { DEFAULT_CATEGORY_ROUTING } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
@@ -92,11 +93,30 @@ export async function GET(request: Request) {
       itemsByTicket.get(it.ticketId)!.push(it);
     }
 
-    const result = slim.map((t) => ({
-      ...t,
-      receiptImage: null, // keep field defined so clients know it needs fetching on demand
-      items: itemsByTicket.get((t as { id: number }).id) || [],
-    }));
+    // Split Billing: attach each ticket's payment records + server-computed
+    // paid/remaining in ONE batched query (no N+1). Old tickets simply have [].
+    const payments = needItems && ticketIds.length > 0
+      ? await db.select().from(ticketPayments).where(inArray(ticketPayments.ticketId, ticketIds))
+      : [];
+    const paymentsByTicket = new Map<number, typeof payments>();
+    for (const p of payments) {
+      if (!paymentsByTicket.has(p.ticketId)) paymentsByTicket.set(p.ticketId, []);
+      paymentsByTicket.get(p.ticketId)!.push(p);
+    }
+
+    const result = slim.map((t) => {
+      const id = (t as { id: number }).id;
+      const pays = paymentsByTicket.get(id) || [];
+      const bal = computeBalance((t as { totalAmount: number }).totalAmount ?? 0, pays);
+      return {
+        ...t,
+        receiptImage: null, // keep field defined so clients know it needs fetching on demand
+        items: itemsByTicket.get(id) || [],
+        payments: pays,
+        paidAmount: bal.paid,
+        remainingAmount: bal.remaining,
+      };
+    });
 
     return NextResponse.json(result);
   } catch (error) {

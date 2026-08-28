@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { tickets, ticketItems, categories } from "@/db/schema";
+import { tickets, ticketItems, categories, ticketPayments } from "@/db/schema";
 import { ensureTablesExist } from "@/db/migrate";
 import { inArray, or, gt } from "drizzle-orm";
 import { requireAdmin } from "@/lib/session";
@@ -82,14 +82,22 @@ export async function GET() {
       .slice(0, 200);
     const historyTicketIds = orderHistoryTickets.map((t) => t.id);
 
-    const [todayItems, historyItems] = await Promise.all([
+    const [todayItems, historyItems, todayPayments] = await Promise.all([
       todayTicketIds.size > 0
         ? db.select().from(ticketItems).where(inArray(ticketItems.ticketId, [...todayTicketIds]))
         : Promise.resolve([]),
       historyTicketIds.length > 0
         ? db.select().from(ticketItems).where(inArray(ticketItems.ticketId, historyTicketIds))
         : Promise.resolve([]),
+      todayTicketIds.size > 0
+        ? db.select().from(ticketPayments).where(inArray(ticketPayments.ticketId, [...todayTicketIds]))
+        : Promise.resolve([] as Array<typeof ticketPayments.$inferSelect>),
     ]);
+    const paymentsByTicket = new Map<number, typeof todayPayments>();
+    for (const p of todayPayments) {
+      if (!paymentsByTicket.has(p.ticketId)) paymentsByTicket.set(p.ticketId, []);
+      paymentsByTicket.get(p.ticketId)!.push(p);
+    }
 
     // Peak selling hours — orders grouped by hour of the day (today)
     const hourAgg: Array<{ hour: number; orders: number; revenue: number }> = Array.from({ length: 24 }, (_, h) => ({
@@ -136,14 +144,27 @@ export async function GET() {
       .map(([category, revenue]) => ({ category, revenue }))
       .sort((a, b) => b.revenue - a.revenue);
 
-    // Payment method statistics
+    // Payment method statistics. When a ticket has settlement records (Split
+    // Billing), sum the ACTUAL per-method payment amounts; otherwise fall back
+    // to the legacy single payment method for old single-payment tickets.
+    // Revenue elsewhere still sums ticket totals, so this never double-counts.
     const payAgg = new Map<string, { count: number; revenue: number }>();
     for (const t of todayTickets) {
-      const m = t.paymentMethod || "cash";
-      const cur = payAgg.get(m) || { count: 0, revenue: 0 };
-      cur.count += 1;
-      cur.revenue += t.totalAmount || 0;
-      payAgg.set(m, cur);
+      const pays = (paymentsByTicket.get(t.id) || []).filter((p) => p.status !== "void");
+      if (pays.length > 0) {
+        for (const p of pays) {
+          const cur = payAgg.get(p.method) || { count: 0, revenue: 0 };
+          cur.count += 1;
+          cur.revenue += p.amount || 0;
+          payAgg.set(p.method, cur);
+        }
+      } else {
+        const m = t.paymentMethod || "cash";
+        const cur = payAgg.get(m) || { count: 0, revenue: 0 };
+        cur.count += 1;
+        cur.revenue += t.totalAmount || 0;
+        payAgg.set(m, cur);
+      }
     }
     const paymentStats = Array.from(payAgg.entries()).map(([method, v]) => ({
       method,

@@ -173,6 +173,33 @@ item/category analysis, low sellers, order patterns and a rule-based Opportuniti
 - **Timezone:** day/hour bucketing centralized in one Addis-aware helper (`dayKey`/`hourOf`,
   `Africa/Addis_Ababa`); a full `timestamptz` migration is deliberately deferred and documented.
 
+## 4f. SPLIT BILLING V1 (settlement-only)
+
+ONE operational ticket = ONE order; splitting affects only how the bill is PAID. No cloned
+orders, no seats, no refunds, no change, no tips.
+
+- **`ticket_payments`** table (additive): `id, ticket_id, amount, method (cash|telebirr|cbe|card|
+  online), receipt_image (per-payment proof), reference, status (active|void), recorded_by,
+  idempotency_key, created_at`. Unique `(ticket_id, idempotency_key)`; index on `ticket_id`.
+- **Pure engine** `src/lib/split-billing.ts`: `computeBalance` (server-authoritative remaining),
+  `splitEven` (integer shares summing exactly), `validatePayment` (>0 integer, ≤ remaining, not
+  cancelled/paid, valid method), `methodToPaymentStatus`.
+- **`/api/ticket-payments`**: POST create / PATCH void restricted to **cashier + admin** (waiter/
+  kitchen/barista→403, none→401); GET read for any staff. Creation runs in ONE transaction: lock
+  ticket (`FOR UPDATE`), re-read active payments, recompute remaining from the CURRENT total,
+  validate, insert once (idempotent), and mark `paid`/`closedAt`/`verifiedAt` **only** when the
+  recomputed remaining reaches 0 — otherwise the ticket stays open.
+- **Cashier UI**: Total/Paid/Remaining, payment history, Add Payment, Pay Remaining, Split-evenly
+  (÷2/÷3/÷4) suggestions, optional per-payment digital proof. Legacy "Mark PAID & Release" is only
+  offered when a ticket has no settlement records; split tickets close at zero remaining.
+- **Reporting compatibility**: revenue/order-count still come from `tickets.totalAmount` (one order);
+  payment **mix** in `/api/reports` and Revenue Intelligence now sums `ticket_payments` by method when
+  present, falling back to the legacy single method for old tickets — a 6,000 split 2,000/2,500/1,500
+  reports Revenue=6,000, Orders=1, correct per-method amounts (no double count).
+
+**NOT V1 (documented, not built):** by-item splitting, quantity splitting, guest/seat assignment,
+refunds/void-after-close, cash received/change, tips, service charge, customer accounts.
+
 ## 5. Configuration, not hard-coding
 
 Everything venue-specific lives in `src/lib/restaurant.ts` (`RESTAURANT: RestaurantConfig`):
@@ -192,7 +219,7 @@ and feature modules. `brand.ts` reads from it and repairs any Fana text leaked f
 - ✅ **Rush Mode** implemented (admin `/api/rush` + Rush Mode tab); deployment verification pending.
 - ✅ **Order Health** implemented (`/api/order-health` + Order Health tab); deployment verification pending.
 - ✅ **Revenue Intelligence** implemented (`/api/revenue-intelligence` + Revenue Intel tab); deployment verification pending.
-- Not started: Split Billing.
+- ✅ **Split Billing V1** implemented (`ticket_payments` + `/api/ticket-payments` + cashier settlement UI); deployment verification pending.
 - **Revenue intelligence**: avg table value, "kitfo tables also order coffee", peak-hour alerts.
 - **Group billing**: split equally / pay my items / host pays on one merged table ticket.
 - **Reservations as "Plan your evening"** (dinner / + show / + ceremony / group feast).

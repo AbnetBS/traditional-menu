@@ -164,6 +164,24 @@ export const culturalContent = pgTable("cultural_content", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ─── SPLIT BILLING (settlement-only) ───────────────────────────────────────
+// One operational ticket = one order. Split Billing is purely settlement:
+// multiple payment records against a single ticket. Never clones orders.
+// `status` = active | void. Unique (ticket_id, idempotency_key) prevents
+// double-click / retry / two-device duplicate payments.
+export const ticketPayments = pgTable("ticket_payments", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").notNull(),
+  amount: integer("amount").notNull(),
+  method: varchar("method", { length: 20 }).notNull(), // cash|telebirr|cbe|card|online
+  receiptImage: text("receipt_image"), // per-payment digital proof
+  reference: varchar("reference", { length: 100 }),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  recordedBy: varchar("recorded_by", { length: 100 }),
+  idempotencyKey: varchar("idempotency_key", { length: 64 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ─── AMHARIC AUTO-TRANSLATION CACHE ─────────────────────────────────────────
 // Google Translate results for owner-managed content (menu items the owner
 // adds, categories, announcements, settings texts) are cached here so each

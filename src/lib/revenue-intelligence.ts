@@ -51,6 +51,12 @@ export interface RiItemRow {
   removed: boolean | null;
   stationName: string | null;
 }
+export interface RiPaymentRow {
+  ticketId: number;
+  method: string;
+  amount: number | null;
+  status: string;
+}
 
 export interface ResolvedRange {
   from: string; // YYYY-MM-DD (Addis)
@@ -199,7 +205,8 @@ export function computeRevenueIntelligence(
   tickets: RiTicketRow[],
   itemRows: RiItemRow[],
   range: ResolvedRange,
-  thresholds: RiThresholds = DEFAULT_RI_THRESHOLDS
+  thresholds: RiThresholds = DEFAULT_RI_THRESHOLDS,
+  paymentRows: RiPaymentRow[] = []
 ): RevenueIntelligenceResult {
   const qualifying = tickets.filter(isRevenueTicket);
   const inRange = (t: RiTicketRow, a: string, b: string) => {
@@ -243,15 +250,32 @@ export function computeRevenueIntelligence(
     .map(([slug, v]) => ({ name: slug, quantity: v.quantity, revenue: v.revenue, qtyPct: pct(v.quantity, totalQty), revPct: pct(v.revenue, totalItemRevenue) }))
     .sort((a, b) => b.revenue - a.revenue);
 
-  /* payment mix */
+  /* payment mix — from settlement records when present (Split Billing), else
+     the legacy single method. Revenue (headline) still sums ticket totals, so
+     a split ticket counts once and its methods sum to the same total. */
+  const paysByTicket = new Map<number, RiPaymentRow[]>();
+  for (const p of paymentRows) {
+    if (p.status === "void") continue;
+    const arr = paysByTicket.get(p.ticketId) ?? [];
+    arr.push(p); paysByTicket.set(p.ticketId, arr);
+  }
   const payAgg = new Map<string, { amount: number; count: number }>();
   for (const t of cur) {
-    let m = t.paymentMethod || "";
-    if (!m && t.paymentStatus) m = t.paymentStatus.replace("paid_", "");
-    m = m || "cash";
-    const c = payAgg.get(m) ?? { amount: 0, count: 0 };
-    c.amount += t.totalAmount || 0; c.count++;
-    payAgg.set(m, c);
+    const pays = paysByTicket.get(t.id) ?? [];
+    if (pays.length > 0) {
+      for (const p of pays) {
+        const c = payAgg.get(p.method) ?? { amount: 0, count: 0 };
+        c.amount += p.amount || 0; c.count++;
+        payAgg.set(p.method, c);
+      }
+    } else {
+      let m = t.paymentMethod || "";
+      if (!m && t.paymentStatus) m = t.paymentStatus.replace("paid_", "");
+      m = m || "cash";
+      const c = payAgg.get(m) ?? { amount: 0, count: 0 };
+      c.amount += t.totalAmount || 0; c.count++;
+      payAgg.set(m, c);
+    }
   }
   const paymentMix: PaymentStat[] = [...payAgg.entries()]
     .map(([method, v]) => ({ method, amount: v.amount, count: v.count, pct: pct(v.amount, hc.revenue) }))

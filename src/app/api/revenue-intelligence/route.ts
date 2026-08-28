@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { tickets, ticketItems } from "@/db/schema";
+import { tickets, ticketItems, ticketPayments } from "@/db/schema";
 import { ensureTablesExist } from "@/db/migrate";
 import { and, gte, lte, inArray, eq, or } from "drizzle-orm";
 import { readAdminSession, readStaffSession } from "@/lib/session";
@@ -63,15 +63,17 @@ export async function GET(request: Request) {
         )
       );
 
+    const rowIds = rows.map((t) => t.id);
     let items: Array<typeof ticketItems.$inferSelect> = [];
-    if (rows.length > 0) {
-      items = await db
-        .select()
-        .from(ticketItems)
-        .where(and(inArray(ticketItems.ticketId, rows.map((t) => t.id)), eq(ticketItems.removed, false)));
+    let payments: Array<typeof ticketPayments.$inferSelect> = [];
+    if (rowIds.length > 0) {
+      [items, payments] = await Promise.all([
+        db.select().from(ticketItems).where(and(inArray(ticketItems.ticketId, rowIds), eq(ticketItems.removed, false))),
+        db.select().from(ticketPayments).where(inArray(ticketPayments.ticketId, rowIds)),
+      ]);
     }
 
-    const result = computeRevenueIntelligence(rows, items, range, DEFAULT_RI_THRESHOLDS);
+    const result = computeRevenueIntelligence(rows, items, range, DEFAULT_RI_THRESHOLDS, payments);
     return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });

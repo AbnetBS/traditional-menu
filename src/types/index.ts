@@ -147,6 +147,23 @@ export interface Ticket {
   verifiedBy?: string | null;
   verifiedAt?: string | null;
   items?: TicketItem[];
+  /** Split Billing settlement records + server-computed balance (optional). */
+  payments?: TicketPayment[];
+  paidAmount?: number;
+  remainingAmount?: number;
+}
+
+export interface TicketPayment {
+  id: number;
+  ticketId: number;
+  amount: number;
+  method: string;
+  receiptImage?: string | null;
+  reference?: string | null;
+  status: string;
+  recordedBy?: string | null;
+  idempotencyKey?: string | null;
+  createdAt?: string;
 }
 
 export interface ReportData {

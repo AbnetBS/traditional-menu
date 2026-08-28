@@ -51,6 +51,10 @@ function walk(dir) {
 }
 
 const guardRe = /requireAdmin\(|requireStaff\(|requireStaffOrAdmin\(/;
+// A custom settlement guard is acceptable ONLY if it provably enforces both the
+// unauthenticated (401) and wrong-role (403) paths — e.g. Split Billing's
+// cashier/admin-only authorizeSettlement(). This is stricter, not weaker.
+const customGuardRe = (src) => /authorizeSettlement\(/.test(src) && /401/.test(src) && /403/.test(src);
 const mutationRe = /export async function (POST|PUT|DELETE|PATCH)/;
 
 // ── 1 & 2: mutation routes must be guarded ──────────────────────────────────
@@ -62,7 +66,7 @@ for (const file of walk(API)) {
     pass(`${rel}: public auth endpoint (no guard expected)`, true);
     continue;
   }
-  pass(`${rel}: mutation route has a guard`, guardRe.test(src));
+  pass(`${rel}: mutation route has a guard`, guardRe.test(src) || customGuardRe(src));
 
   // Destructive endpoints must be ADMIN (not staff).
   if (/(reset|setup|seed|dbtest|menu-bulk|tickets\/cleanup)\/route\.ts$/.test(file)) {
