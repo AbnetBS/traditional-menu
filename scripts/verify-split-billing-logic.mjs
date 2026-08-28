@@ -44,6 +44,8 @@ t("even split 6000/3", JSON.stringify(splitEven(6000, 3)) === JSON.stringify([20
 { const s = splitEven(1000, 3); t("uneven split sums exactly 1000", s.reduce((a, b) => a + b, 0) === 1000 && s.length === 3); }
 { const s = splitEven(10, 4); t("uneven split 10/4 sums 10", s.reduce((a, b) => a + b, 0) === 10); }
 t("total changes after partial → recompute", computeBalance(7500, [P(2000)]).remaining === 5500);
+t("total dropped below paid (item removed) → remaining floors at 0", computeBalance(2000, [P(3000)]).remaining === 0);
+t("even split by 2", JSON.stringify(splitEven(5001, 2)) === JSON.stringify([2501, 2500]));
 
 if (fails) { console.error(`\n❌ Split Billing logic tests FAILED (${fails})`); process.exit(1); }
 console.log("\n✅ Split Billing logic tests passed");

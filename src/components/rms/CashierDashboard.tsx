@@ -719,7 +719,11 @@ export default function CashierDashboard() {
                       {/* Legacy full-payment path only when there are NO split
                           settlement records; split tickets close automatically
                           at zero remaining via /api/ticket-payments. */}
-                      {t.status === "completed" && (!t.payments || t.payments.length === 0) && (
+                      {/* Full-payment/close path: legacy tickets (no settlement
+                          records) OR split tickets whose balance is fully
+                          settled (remaining 0, e.g. after an item removal). */}
+                      {t.status === "completed" &&
+                        ((!t.payments || t.payments.length === 0) || (t.remainingAmount ?? t.totalAmount) === 0) && (
                         <button onClick={() => markPaid(t)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-2.5 rounded-xl flex items-center justify-center gap-2">
                           <CheckCircle2 className="w-4 h-4" /> Mark PAID & Release Table
                         </button>

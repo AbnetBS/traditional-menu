@@ -16,12 +16,14 @@ pass("does NOT use requireStaffOrAdmin for settlement (waiter/kitchen/barista de
 pass("amount validated server-side", /validatePayment\(/.test(route));
 pass("remaining balance server-computed (never trusted from client)", /computeBalance\(/.test(route) && !/body\.remaining|body\.paid\b/.test(route));
 pass("idempotency enforced (duplicate returns existing)", /idempotencyKey/.test(route) && /dup\.length > 0/.test(route));
+pass("same idempotency key w/ different payload rejected (not silently reused)", /already used with different payment details/.test(route));
 pass("transaction + row lock for concurrency", /db\.transaction/.test(route) && /FOR UPDATE/.test(route));
 pass("closes only at zero remaining", /bal\.remaining === 0/.test(route));
 pass("per-payment receipt persistence", /persistImageRef\(/.test(route));
 
 const tickets = read("src/app/api/tickets/route.ts");
 pass("ticket reads expose paid/remaining + payments (no second representation)", /remainingAmount/.test(tickets) && /payments:/.test(tickets));
+pass("generic status flip cannot close a partially-settled ticket", /must be settled via payments first/.test(tickets));
 
 const reports = read("src/app/api/reports/route.ts");
 pass("reports payment mix reads payment records w/ legacy fallback", /paymentsByTicket/.test(reports));

@@ -101,10 +101,14 @@ export async function POST(request: Request) {
 
       const ticket = { id: t.id, status: t.status, totalAmount: Number(t.total_amount) || 0 };
 
-      // 2. Idempotency: same key → return the already-recorded payment.
+      // 2. Idempotency: same key + same payload → return the already-recorded
+      // payment (retry/double-click safe). Same key but a DIFFERENT payload is a
+      // client bug or abuse → reject, never silently reuse the old payment.
       const dup = await tx.select().from(ticketPayments).where(and(eq(ticketPayments.ticketId, ticketId), eq(ticketPayments.idempotencyKey, idempotencyKey)));
       const existingPayments = await tx.select().from(ticketPayments).where(eq(ticketPayments.ticketId, ticketId));
       if (dup.length > 0) {
+        const same = dup[0].amount === amount && dup[0].method === method;
+        if (!same) return { error: "Idempotency key already used with different payment details.", status: 400 } as const;
         const bal = computeBalance(ticket.totalAmount, existingPayments);
         return { value: { ticketId, paymentId: dup[0].id, total: bal.total, paid: bal.paid, remaining: bal.remaining, method: dup[0].method, status: dup[0].status, fullyPaid: bal.remaining === 0, duplicate: true } } as const;
       }

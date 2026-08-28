@@ -389,6 +389,24 @@ export async function PUT(request: Request) {
       }
     }
 
+    // Split Billing safety: a ticket that already has settlement records may
+    // only reach `paid` when its remaining balance is zero (settlement closes
+    // it). The generic status flip must NOT discard an outstanding balance.
+    // Legacy tickets (no payments) are unaffected.
+    if (body.status === "paid" && cur.status !== "paid") {
+      const pays = await db.select().from(ticketPayments).where(eq(ticketPayments.ticketId, cur.id));
+      const activePays = pays.filter((p) => p.status !== "void");
+      if (activePays.length > 0) {
+        const bal = computeBalance(cur.totalAmount ?? 0, pays);
+        if (bal.remaining > 0) {
+          return NextResponse.json(
+            { error: `Remaining balance of ${bal.remaining} ETB must be settled via payments first.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (body.status) updates.status = body.status;
     // Payment method is validated (GROUP 5) — only the methods this cafe actually
