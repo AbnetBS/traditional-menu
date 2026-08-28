@@ -1,127 +1,114 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
-import AboutSection from "@/components/AboutSection";
-import WhyChooseSection from "@/components/WhyChooseSection";
-import MenuSection from "@/components/MenuSection";
-import ServicesSection from "@/components/ServicesSection";
-import GallerySection from "@/components/GallerySection";
-import ReviewsSection from "@/components/ReviewsSection";
-import LocationSection from "@/components/LocationSection";
-import FaqSection from "@/components/FaqSection";
-import CtaBanner from "@/components/CtaBanner";
-import LanguageToggle from "@/components/LanguageToggle";
-import Footer from "@/components/Footer";
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  TOTOT — CULTURAL HOMEPAGE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  Order of the story:
+ *    1. Hero — welcome to the table (Amharic leads, one verb: explore the feast)
+ *    2. Tonight at Totot — the programme guests plan their evening around
+ *    3. Menu — photographic, spice-honest, ordering lives on the QR page
+ *    4. Share the Table — feast packages (the average-order-value lever)
+ *    5. The Story Behind the Food — name origin + dish storytelling
+ *    6. Visit — address, plus code, hours, map
+ *
+ *  Data comes from the API; if there is no database yet (fresh deploy / local
+ *  preview) the Totot demo menu stands in so the design is never empty.
+ */
 
-import { MenuItem, Category, SiteSettings, Review, GalleryItem } from "@/types";
-import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS, DEFAULT_REVIEWS, DEFAULT_GALLERY } from "@/lib/initial-data";
+import { useEffect, useState, useCallback } from "react";
+import { MenuItem, Category, SiteSettings } from "@/types";
+import { TOTOT_CATEGORIES, TOTOT_MENU_ITEMS } from "@/lib/totot-demo";
+
+import HeroSection from "@/components/HeroSection";
+import TonightSection from "@/components/cultural/TonightSection";
+import CulturalMenuSection from "@/components/cultural/CulturalMenuSection";
+import FeastPackagesSection from "@/components/cultural/FeastPackagesSection";
+import StorySection from "@/components/cultural/StorySection";
+import VisitSection from "@/components/cultural/VisitSection";
+import CulturalFooter from "@/components/cultural/CulturalFooter";
+import LanguageToggle from "@/components/LanguageToggle";
 
 export default function HomePage() {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS as SiteSettings);
+  const [settings] = useState<SiteSettings>({} as SiteSettings);
   const [categories, setCategories] = useState<Category[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  const loadSiteData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      // PERFORMANCE: no /api/seed call — data routes self-initialize on first read
-      // (seed runs once per server process). All data fetches run in parallel.
-      const [settingsRes, catRes, menuRes, revRes, galRes] = await Promise.all([
-        fetch("/api/settings"),
+      const [catRes, menuRes] = await Promise.all([
         fetch("/api/categories"),
         fetch("/api/menu"),
-        fetch("/api/reviews"),
-        fetch("/api/gallery"),
       ]);
 
-      if (settingsRes.ok) {
-        const sData = await settingsRes.json();
-        if (Object.keys(sData).length > 0) setSettings(sData);
-      }
+      let cats: Category[] = [];
+      let items: MenuItem[] = [];
 
       if (catRes.ok) {
-        const cData = await catRes.json();
-        if (cData.length > 0) setCategories(cData);
+        const c = await catRes.json();
+        if (Array.isArray(c) && c.length > 0) cats = c;
       }
-
       if (menuRes.ok) {
-        const mData = await menuRes.json();
-        if (mData.length > 0) setMenuItems(mData);
+        const m = await menuRes.json();
+        if (Array.isArray(m) && m.length > 0) items = m;
       }
 
-      if (revRes.ok) {
-        const rData: Review[] = await revRes.json();
-        // only approved reviews are publicly visible
-        const approved = rData.filter((r) => r.isApproved);
-        if (approved.length > 0) setReviews(approved);
+      // Design fallback: no DB yet → show the Totot demo menu, never a void.
+      if (items.length === 0) {
+        setMenuItems(TOTOT_MENU_ITEMS);
+        setCategories(TOTOT_CATEGORIES);
+      } else {
+        setMenuItems(items);
+        setCategories(cats.length ? cats : TOTOT_CATEGORIES);
       }
-
-      if (galRes.ok) {
-        const gData = await galRes.json();
-        if (gData.length > 0) setGallery(gData);
-      }
-    } catch (err) {
-      console.error("Error loading Fana Cafe data:", err);
+    } catch {
+      setMenuItems(TOTOT_MENU_ITEMS);
+      setCategories(TOTOT_CATEGORIES);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadSiteData();
+    loadData();
     fetch("/api/admin/verify")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.authenticated) setIsAdminLoggedIn(true);
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.authenticated) setIsAdminLoggedIn(true);
       })
       .catch(() => {});
-  }, []);
+  }, [loadData]);
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
   const goToAdmin = () => {
     window.location.href = "/admin";
   };
 
-  const scrollToMenu = () => {
-    const el = document.getElementById("menu");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+  const openOrdering = () => {
+    // QR ordering without a table → the customer menu.
+    window.location.href = "/menu";
   };
 
-  const scrollToLocation = () => {
-    const el = document.getElementById("contact");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+  void settings;
+  void isAdminLoggedIn;
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] text-[#2C1B17] font-sans selection:bg-[#C9A227] selection:text-[#2C1B17]">
-      <Navbar settings={settings} onOpenAdmin={goToAdmin} isAdminLoggedIn={isAdminLoggedIn} />
+    <div className="min-h-screen bg-obsidian text-ivory font-body selection:bg-gold selection:text-obsidian">
       <LanguageToggle />
 
       <main>
-        <HeroSection settings={settings} onOpenMenu={scrollToMenu} onOpenLocation={scrollToLocation} />
-
-        {/* Menu comes FIRST — clean & simple, what visitors want to see immediately */}
-        <MenuSection items={menuItems} categories={categories} browseOnly />
-
-        <AboutSection settings={settings} />
-
-        <WhyChooseSection />
-
-        <ServicesSection />
-
-        <GallerySection items={gallery} />
-
-        <LocationSection settings={settings} />
-
-        <FaqSection />
-
-        <ReviewsSection reviews={reviews} onReviewSubmitted={loadSiteData} />
-
-        <CtaBanner settings={settings} onOpenMenu={scrollToMenu} />
+        <HeroSection onOpenMenu={openOrdering} onOpenSection={scrollTo} />
+        <TonightSection />
+        <CulturalMenuSection items={menuItems} categories={categories} onOrder={openOrdering} />
+        <FeastPackagesSection />
+        <StorySection />
+        <VisitSection />
       </main>
 
-      <Footer settings={settings} onOpenAdmin={goToAdmin} isAdminLoggedIn={isAdminLoggedIn} />
+      <CulturalFooter onAdmin={goToAdmin} />
     </div>
   );
 }

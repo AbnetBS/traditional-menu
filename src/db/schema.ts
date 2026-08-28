@@ -130,6 +130,40 @@ export const ticketItems = pgTable("ticket_items", {
   idempotencyKey: varchar("idempotency_key", { length: 64 }),
 });
 
+// ─── SERVICE CALLS (call waiter without shouting) ───────────────────────────
+// A guest taps "Need waiter / More injera / Bill please / Birthday" on the QR
+// page; the request lands here and shows on the waiter screen as a priority
+// queue. This replaces waving across a loud cultural hall.
+export const serviceCalls = pgTable("service_calls", {
+  id: serial("id").primaryKey(),
+  tableId: integer("table_id").notNull(),
+  tableName: varchar("table_name", { length: 50 }).notNull(),
+  // waiter | bill | injera | coffee | drinks | celebration | assistance
+  kind: varchar("kind", { length: 30 }).notNull(),
+  note: text("note"),
+  status: varchar("status", { length: 20 }).notNull().default("new"), // new | ack | done
+  createdAt: timestamp("created_at").defaultNow(),
+  ackBy: varchar("ack_by", { length: 100 }),
+});
+
+// ─── CULTURAL CONTENT MANAGER ───────────────────────────────────────────────
+// Owner-controlled cultural layer: tonight's experiences, feast packages and
+// dish stories. Stored as typed JSON rows so the admin editor can manage them
+// without a code change. `kind` = experience | package | story.
+export const culturalContent = pgTable("cultural_content", {
+  id: serial("id").primaryKey(),
+  kind: varchar("kind", { length: 30 }).notNull(),
+  data: text("data").notNull(), // JSON of the item (id is the row id)
+  imageUrl: text("image_url"), // /api/images/{id} ref, persisted via cdn_images
+  // Lifecycle: draft (hidden, editable) | published (public) — combined with
+  // `active` (published+active = visible; active=false = inactive/hidden).
+  status: varchar("status", { length: 20 }).notNull().default("published"),
+  sortOrder: integer("sort_order").default(0),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // ─── AMHARIC AUTO-TRANSLATION CACHE ─────────────────────────────────────────
 // Google Translate results for owner-managed content (menu items the owner
 // adds, categories, announcements, settings texts) are cached here so each

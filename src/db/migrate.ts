@@ -16,7 +16,7 @@ import { sql } from "drizzle-orm";
  * once and stamps the new version. Existing DBs self-heal on the first
  * request after a deploy — no manual action needed.
  */
-const SCHEMA_VERSION = "2026-08-25-1";
+const SCHEMA_VERSION = "2026-08-26-cultural-media-lifecycle";
 
 /**
  * UNIVERSAL self-healing schema manager — works on ANY Postgres database
@@ -228,9 +228,43 @@ const RMS_CREATES: Array<[string, string]> = [
       created_at timestamp DEFAULT now()
     )`,
   ],
+  [
+    // Service calls: a guest taps "Need waiter / Bill please" on the QR page
+    // and it surfaces on the waiter screen as a priority queue.
+    "service_calls",
+    `CREATE TABLE IF NOT EXISTS service_calls (
+      id serial PRIMARY KEY,
+      table_id integer NOT NULL,
+      table_name text DEFAULT '',
+      kind text DEFAULT 'waiter',
+      note text,
+      status text DEFAULT 'new',
+      created_at timestamp DEFAULT now(),
+      ack_by text
+    )`,
+  ],
+  [
+    // Cultural Content Manager: owner-edited experiences / packages / stories.
+    "cultural_content",
+    `CREATE TABLE IF NOT EXISTS cultural_content (
+      id serial PRIMARY KEY,
+      kind text DEFAULT 'experience',
+      data text DEFAULT '{}',
+      image_url text,
+      status text DEFAULT 'published',
+      sort_order integer DEFAULT 0,
+      active boolean DEFAULT true,
+      created_at timestamp DEFAULT now(),
+      updated_at timestamp DEFAULT now()
+    )`,
+  ],
 ];
 
 const RMS_COLUMNS: Record<string, Record<string, ColSpec>> = {
+  cultural_content: {
+    image_url: { type: "text", dropNotNull: true },
+    status: { type: "text", def: "'published'" },
+  },
   staff_users: {
     name: { type: "text", def: "'Staff'" },
     role: { type: "text", def: "'waiter'" },

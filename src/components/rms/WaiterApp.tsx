@@ -29,6 +29,26 @@ interface CartEntry {
 
 type View = "login" | "tables" | "order" | "bill" | "payment";
 
+/* Service-call display helpers: an emoji per request kind + "n min ago". */
+const CALL_EMOJI: Record<string, string> = {
+  waiter: "👋",
+  bill: "💳",
+  injera: "🍽️",
+  coffee: "☕",
+  drinks: "🥤",
+  celebration: "🎉",
+  assistance: "🛟",
+};
+
+function timeAgo(iso?: string | null): string {
+  if (!iso) return "";
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const h = Math.floor(mins / 60);
+  return `${h}h ago`;
+}
+
 export default function WaiterApp() {
   // Auth
   const [staffName, setStaffName] = useState<string>("");
@@ -78,6 +98,29 @@ export default function WaiterApp() {
 
   // Ring bell alerts (new QR orders)
   const [alertsOn, setAlertsOn] = useState(false);
+
+  /* ── SERVICE CALLS — guests tapping "need waiter / bill" from the QR page ── */
+  const [serviceCalls, setServiceCalls] = useState<
+    Array<{ id: number; tableName: string; kind: string; status: string; createdAt?: string | null }>
+  >([]);
+
+  const loadServiceCalls = async () => {
+    try {
+      const r = await fetch("/api/service-calls");
+      if (r.ok) setServiceCalls(await r.json());
+    } catch {
+      /* realtime is best-effort; the next push will resync */
+    }
+  };
+
+  const ackCall = async (id: number, status: "ack" | "done") => {
+    await fetch("/api/service-calls", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    await loadServiceCalls();
+  };
   const seenPendingRef = useRef<Set<number>>(new Set());
   const alertsInitRef = useRef(false);
 
@@ -100,15 +143,20 @@ export default function WaiterApp() {
   useEffect(() => {
     if (staffName) {
       loadAll();
+      loadServiceCalls();
       // REALTIME (SSE): instead of polling every 8s, the server pushes a
       // "refresh" signal only when an order/table actually changes. This keeps
       // the network and database idle until something real happens.
       const es = new EventSource("/api/realtime?channel=orders");
-      es.onmessage = () => loadTables();
+      es.onmessage = () => {
+        loadTables();
+        loadServiceCalls();
+      };
       es.onerror = () => {
         // On a dropped connection the browser auto-reconnects; refresh once to
         // make sure nothing was missed while disconnected.
         loadTables();
+        loadServiceCalls();
       };
       // Refresh immediately when the tab becomes visible again (user action).
       const onVisible = () => {
@@ -482,6 +530,47 @@ export default function WaiterApp() {
               <span className="flex items-center gap-1"><i className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />Pay</span>
             </div>
           </div>
+
+          {/* ── SERVICE CALL QUEUE — guests asking for the waiter from the QR page ── */}
+          {serviceCalls.length > 0 && (
+            <div className="rounded-2xl border border-[#C9A227]/40 bg-[#2C1B17] overflow-hidden">
+              <p className="px-4 pt-3 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#C9A227]">
+                🔔 Guest requests
+              </p>
+              <div className="divide-y divide-stone-800">
+                {serviceCalls.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-lg" aria-hidden="true">{CALL_EMOJI[c.kind] ?? "🔔"}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-amber-100">{c.tableName}</p>
+                        <p className="text-[11px] text-stone-400 capitalize">
+                          {c.kind.replace(/-/g, " ")} · {timeAgo(c.createdAt)}
+                          {c.status === "ack" ? " • on the way" : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {c.status !== "ack" && (
+                        <button
+                          onClick={() => ackCall(c.id, "ack")}
+                          className="rounded-lg bg-[#C9A227] px-3 py-1.5 text-[11px] font-extrabold text-[#2C1B17]"
+                        >
+                          On my way
+                        </button>
+                      )}
+                      <button
+                        onClick={() => ackCall(c.id, "done")}
+                        className="rounded-lg bg-white/10 px-3 py-1.5 text-[11px] font-extrabold text-white"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {tables.map((t) => (

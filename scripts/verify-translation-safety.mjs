@@ -100,8 +100,13 @@ const pass = (name, value) => {
   if (offenders.length) console.log("   offenders:", offenders.join(", "));
 
   const brand = read("src/lib/brand.ts");
-  pass("brand guard upgrades bare 'Fana Cafe' to 'Fana Cafe & Restaurant'", /BRAND_NAME = "Fana Cafe & Restaurant"/.test(brand));
-  pass("address guard rewrites Golagul → Town Square", /Town Square Building/.test(brand));
+  const resto = read("src/lib/restaurant.ts");
+  // Branding is now config-driven (Totot). The guard's intent is unchanged: a
+  // carried-over legacy venue (Fana / Town Square / Golagul) must never render;
+  // it is always repaired to the configured brand + address.
+  pass("brand guard is driven by the restaurant config (no hard-coded venue)", /from "@\/lib\/restaurant"/.test(brand) && /BRAND_NAME = BRAND/.test(brand));
+  pass("brand guard retires legacy venues (Fana) to the configured brand", /LEGACY_BRANDS/.test(brand) && /fana/i.test(brand) && /brandName: "Totot Traditional Food Hall"/.test(resto));
+  pass("address guard rewrites a legacy address to the configured one", /LEGACY_ADDRESSES/.test(brand) && /fixAddressText/.test(brand) && /address:/.test(resto));
 
   const footer = read("src/components/Footer.tsx");
   const menu = read("src/components/rms/CustomerMenuApp.tsx");

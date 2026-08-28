@@ -10,9 +10,21 @@ import { MenuItem, Category, CafeTable, SiteSettings, Announcement, GalleryItem,
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
 import { fixBrandText } from "@/lib/brand";
-import { useMenuText, useT } from "@/lib/i18n";
+import { useMenuText, useT, useLang } from "@/lib/i18n";
 import LanguageToggle from "@/components/LanguageToggle";
 import { optimizeImageUrl, FALLBACK_FOOD_IMAGE } from "@/lib/image-utils";
+import { RESTAURANT, dishStoryFor } from "@/lib/restaurant";
+import { MesobMark, TibebBand, SpiceMeter, DishFlag } from "@/components/cultural/Patterns";
+import {
+  BellRing,
+  Receipt,
+  Croissant,
+  Coffee as CoffeeIcon,
+  Wine,
+  PartyPopper,
+  HandHelping,
+  X as CloseX,
+} from "lucide-react";
 
 interface CartEntry {
   menuItemId: number;
@@ -46,6 +58,37 @@ export default function CustomerMenuApp() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [lastOrderNumber, setLastOrderNumber] = useState("");
+
+  /* ── CALL THE WAITER (without shouting across a loud hall) ── */
+  const [lang] = useLang();
+  const [callOpen, setCallOpen] = useState(false);
+  const [callSending, setCallSending] = useState<string | null>(null);
+  const [callToast, setCallToast] = useState<string | null>(null);
+
+  const sendServiceCall = async (kind: string) => {
+    setCallSending(kind);
+    try {
+      const res = await fetch("/api/service-calls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableId, kind }),
+      });
+      if (res.ok) {
+        const am = lang === "am";
+        setCallToast(
+          am
+            ? "ጥያቄዎ ርሷል — ሰርቨርዎ በመንገድ ላይ ነው።"
+            : "Request sent — your waiter is on the way."
+        );
+        setCallOpen(false);
+        window.setTimeout(() => setCallToast(null), 3500);
+      }
+    } catch {
+      // Network hiccup — the guest can simply tap again.
+    } finally {
+      setCallSending(null);
+    }
+  };
 
   // ── IDEMPOTENCY (Group 1): one key per submission attempt, reused on retries so
   //    a double-tap or WiFi retry can NEVER create a duplicate order. If the cart
@@ -412,26 +455,40 @@ export default function CustomerMenuApp() {
 
   /* ── MAIN MENU ── */
   return (
-    <div className="min-h-screen bg-[#FAF6F0] pb-28">
+    <div className="min-h-screen bg-ivory pb-28 text-obsidian">
       <LanguageToggle />
       {/* Header with logo */}
-      <header className="bg-[#2C1B17] text-white sticky top-0 z-40 shadow-xl">
-        <div className="px-4 py-2.5 flex items-center justify-between max-w-lg mx-auto">
-          <div className="flex items-center gap-2.5">
-            <img src={logoUrl} alt="Fana" className="w-10 h-10 rounded-full object-contain bg-white p-0.5" />
+      {/* ── CULTURAL HEADER — the table is the door to the feast ── */}
+      <header className="sticky top-0 z-40 bg-obsidian/95 text-ivory shadow-[var(--shadow-hall)] backdrop-blur-md">
+        <div className="text-gold/50" aria-hidden="true">
+          <TibebBand height={10} />
+        </div>
+        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-gold">
+              <MesobMark size={40} />
+            </span>
             <div>
-              <p className="font-serif font-bold text-sm text-amber-100 leading-none">{menuText(brandName)}</p>
-              <p className="text-[10px] text-[#C9A227] font-bold uppercase tracking-wider">{t("menu_label")} • {menuText(tableName)}</p>
+              <p className="font-display text-sm font-semibold leading-tight text-ivory">
+                {lang === "am" ? RESTAURANT.identity.nameAm : RESTAURANT.identity.shortName}
+              </p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                {lang === "am" ? "የዛሬ ጠረዛ" : "Your table"} • {menuText(tableName)}
+              </p>
             </div>
           </div>
-          <a href={`tel:${phone.replace(/\s+/g, "")}`} className="flex items-center gap-1 bg-[#C9A227] text-[#2C1B17] text-[11px] font-extrabold px-3 py-1.5 rounded-full">
-            <Phone className="w-3 h-3" /> {t("waiter")}
-          </a>
+          <button
+            type="button"
+            onClick={() => setCallOpen(true)}
+            className="flex items-center gap-1.5 rounded-full bg-terracotta px-3.5 py-2 text-[11px] font-extrabold text-ivory transition hover:bg-terracotta-lit"
+          >
+            <BellRing className="h-3.5 w-3.5" /> {t("waiter")}
+          </button>
         </div>
       </header>
 
-      {/* intro */}
-      <div className="bg-gradient-to-r from-[#4E342E] to-[#2C1B17] text-amber-100 text-center text-xs py-2.5 px-4">
+      {/* intro — bilingual, calm */}
+      <div className="bg-coffee-soft px-4 py-2.5 text-center text-xs text-ivory-dim">
         {t("intro")}
       </div>
 
@@ -697,6 +754,40 @@ export default function CustomerMenuApp() {
                 <p className="text-sm text-stone-700 leading-relaxed">{menuText(detailItem.description)}</p>
               </div>
 
+              {/* ── CULTURAL DISH PANEL — make unfamiliar dishes safe to order ── */}
+              {(() => {
+                const story = dishStoryFor(detailItem.name);
+                if (!story) return null;
+                const am = lang === "am";
+                return (
+                  <div className="rounded-2xl border border-[#B8955A]/40 bg-[#F4EBDD] p-4 space-y-3">
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#9A4E32]">
+                      {am ? story.regionAm : story.region}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SpiceMeter level={story.spice} lang={lang} />
+                      {story.raw && <DishFlag kind="raw" lang={lang} />}
+                      {story.fasting && <DishFlag kind="fasting" lang={lang} />}
+                      {!story.fasting && story.vegetarian && <DishFlag kind="vegetarian" lang={lang} />}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500 mb-1">
+                        {am ? "እንዴት ይበላል" : "How to eat it"}
+                      </p>
+                      <p className="text-sm text-stone-700 leading-relaxed">
+                        {am ? story.howToEatAm : story.howToEat}
+                      </p>
+                    </div>
+                    {story.pairsWith.length > 0 && (
+                      <p className="text-xs text-stone-600">
+                        <span className="font-bold">{am ? "ከእነዚህ ጋር ይስማማል፦" : "Goes with:"}</span>{" "}
+                        {story.pairsWith.join(" · ")}
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 {detailItem.prepTime && (
                   <span className="flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-bold">
@@ -912,6 +1003,78 @@ export default function CustomerMenuApp() {
             >
               <Coffee className="w-4 h-4" /> {t("review_order")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── CALL-WAITER TOAST ── */}
+      {callToast && (
+        <div className="fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-full bg-ontime px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-hall)] animate-hall-fade">
+          {callToast}
+        </div>
+      )}
+
+      {/* ── CALL-WAITER SHEET ── */}
+      {callOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setCallOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-3xl bg-obsidian p-5 pb-8 text-ivory animate-hall-fade"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <p className="font-display text-lg font-semibold">
+                {lang === "am" ? "እርዳታ ያስፈልጋል?" : "Need something?"}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCallOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-ivory"
+                aria-label="Close"
+              >
+                <CloseX className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { kind: "waiter", icon: HandHelping, en: "Call waiter", am: "ሰርቨር ጥራ" },
+                { kind: "bill", icon: Receipt, en: "Bill please", am: "ሂሳብ" },
+                { kind: "injera", icon: Croissant, en: "More injera", am: "ተጨማሪ እንጀራ" },
+                { kind: "coffee", icon: CoffeeIcon, en: "Coffee", am: "ቡና" },
+                { kind: "drinks", icon: Wine, en: "Order drinks", am: "መጠጥ" },
+                { kind: "celebration", icon: PartyPopper, en: "Celebration", am: "በዓል" },
+              ].map(({ kind, icon: Icon, en, am }) => (
+                <button
+                  key={kind}
+                  type="button"
+                  disabled={callSending === kind}
+                  onClick={() => sendServiceCall(kind)}
+                  className="flex items-center gap-2.5 rounded-xl border border-gold/25 bg-coffee-soft px-4 py-3.5 text-left text-sm font-semibold transition hover:border-gold/60 disabled:opacity-50"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-gold" />
+                  {lang === "am" ? am : en}
+                </button>
+              ))}
+            </div>
+            {/* Self-service: this page IS the ordering screen. */}
+            <button
+              type="button"
+              onClick={() => setCallOpen(false)}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/15 px-4 py-3 text-sm font-bold text-gold-lit transition hover:bg-gold/25"
+            >
+              <Utensils className="h-4 w-4" />
+              {lang === "am" ? "ተጨማሪ ትዕዝ አክል" : "Place another order"}
+            </button>
+
+            <p className="mt-4 text-center text-[11px] text-ivory-dim">
+              {lang === "am"
+                ? "ጥያቄዎ በቀጥ ወደ ርቨሮች ማሳያ ይደርሳል።"
+                : "Your request goes straight to the waiter screen — no waving needed."}
+            </p>
           </div>
         </div>
       )}
