@@ -33,6 +33,8 @@ export interface RestaurantIdentity {
   shortName: string;
   /** Legal/brand-guarded name returned by fixBrandText(). */
   brandName: string;
+  /** Bundled brand mark — the client-approved Totot logo (public/totot-logo.png). */
+  defaultLogo: string;
   tagline: string;
   taglineAm: string;
   culturePack: CulturePack;
@@ -51,12 +53,22 @@ export interface RestaurantContact {
   plusCode: string;
   lat: string;
   lng: string;
+  /** Public website — empty until the client approves a domain. Use
+   *  NEXT_PUBLIC_SITE_URL (set in Coolify) as the source of truth. */
   website: string;
   googleRating: string;
   googleReviewCount: string;
   /** Totot is a 24-hour hall — that alone changes the UI ("Open now" always). */
   hoursNote: string;
   hoursNoteAm: string;
+  /** OFFICIAL links approved by the client — never invented, never generic. */
+  social: {
+    facebook: string;
+    instagram: string;
+    tiktok: string;
+    /** Official Google Maps listing URL (approved by the client). */
+    mapsUrl: string;
+  };
 }
 
 export interface DesignTokens {
@@ -168,6 +180,9 @@ export const TOTOT: RestaurantConfig = {
     nameAm: "ቶቶት ባህላዊ ምግብ ቤት",
     shortName: "TOTOT",
     brandName: "Totot Traditional Food Hall",
+    // Client-approved Totot logo (added by the owner; the Fana Queen badge
+    // that previously lived at public/logo.png was removed from this branch).
+    defaultLogo: "/totot-logo.png",
     tagline: "Order the food. Discover the culture. Join the celebration.",
     taglineAm: "ምግቡን ይዘዙ። ባህሉን ያግኙ። በበዓሉ ይሳተፉ።",
     culturePack: "gurage",
@@ -190,11 +205,22 @@ export const TOTOT: RestaurantConfig = {
     plusCode: "2R44+VF Addis Ababa",
     lat: "9.0071273",
     lng: "38.8061996",
-    website: "totottraditionalrestaurant.com",
+    // Empty on purpose: the client has not approved/purchased a domain.
+    // NEXT_PUBLIC_SITE_URL (set in Coolify) is the production source of truth.
+    website: "",
     googleRating: "4.1",
     googleReviewCount: "660",
     hoursNote: "Open 24 hours",
     hoursNoteAm: "24 ሰዓት ክፍት",
+    // OFFICIAL links — supplied by the client, verified against the approved
+    // business. Never replace with invented or generic URLs.
+    social: {
+      facebook: "https://web.facebook.com/TototTraditionalRestaurant/",
+      instagram: "https://www.instagram.com/totottraditionalresturant/",
+      tiktok: "https://www.tiktok.com/@totottraditional",
+      mapsUrl:
+        "https://www.google.com/maps/place/Totot+Traditional+Food+Hall+%7C+Gerji+%7C+%E1%89%B6%E1%89%B6%E1%89%B5+%7C+%E1%8C%88%E1%88%AD%E1%8C%82/@9.0072312,38.8062175,17z/data=!3m1!4b1!4m6!3m5!1s0x164b8599dd6be6a5:0x6f01def6f8644ea2!8m2!3d9.0072312!4d38.8062175!16s%2Fg%2F11j5qlc4dr?entry=ttu&g_ep=EgoyMDI2MDgyNi4wIKXMDSoASAFQAw%3D%3D",
+    },
   },
 
   tokens: {

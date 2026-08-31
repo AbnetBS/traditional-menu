@@ -15,7 +15,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 export type Lang = "en" | "am";
 
-const STORAGE_KEY = "fana_lang";
+const STORAGE_KEY = "tm_lang";
 
 /* ───────────────────────── persistence ───────────────────────── */
 
@@ -28,7 +28,7 @@ export function getLang(): Lang {
   return "en";
 }
 
-const LANG_EVENT = "fana-lang-change";
+const LANG_EVENT = "tm-lang-change";
 
 export function setLang(lang: Lang) {
   try {
@@ -117,6 +117,9 @@ const STRINGS = {
     /* customer menu — content sections */
     about_us: "☕ About Us",
     gallery: "Gallery",
+    close: "Close",
+    previous: "Previous",
+    next: "Next",
     what_we_serve: "✨ What We Serve",
     premium_coffee: "☕ Premium Coffee",
     ethiopian_meals: "🍽 Ethiopian Meals",
@@ -148,7 +151,7 @@ const STRINGS = {
     hero_cta_menu: "Explore Menu & Prices",
     hero_cta_location: "Find Us / Scan QR",
     hero_hl_brews: "Specialty Brews",
-    hero_hl_macchiato: "Famous Fana Macchiato",
+    hero_hl_macchiato: "Signature Macchiato",
     hero_hl_juices: "Fresh Fruit Punches",
     hero_hl_spris: "100% Pure Spris Juice",
     hero_hl_dining: "Authentic Dining",
@@ -159,13 +162,13 @@ const STRINGS = {
     sec_menu: "Fresh Flavors & Specialty Brews",
     sec_why: "Crafted For Quality, Flavor & Comfort",
     sec_how: "How Service Works",
-    sec_gallery: "Moments at Fana Cafe",
-    sec_location: "Visit Fana Cafe at 22 Square",
+    sec_gallery: "Moments at Our Venue",
+    sec_location: "Visit Us",
     sec_faq: "Frequently Asked Questions",
-    sec_reviews: "What Visitors Say About Fana Cafe",
+    sec_reviews: "What Visitors Say",
 
     /* homepage — CTA banner */
-    cta_badge: "Visit Fana Cafe Today",
+    cta_badge: "Visit Us Today",
     cta_title: "Great Taste. Comfortable Atmosphere. Memorable Moments.",
     cta_sub: "Life is better with great Ethiopian coffee, delicious freshly prepared food, and meaningful conversations.",
     cta_menu: "Explore Our Menu",
@@ -175,7 +178,7 @@ const STRINGS = {
     /* homepage — footer */
     footer_quick_links: "Quick Links",
     fl_home: "Home",
-    fl_about: "About Fana Cafe",
+    fl_about: "About Us",
     fl_why: "Why Choose Us",
     fl_menu: "Full Menu & Prices",
     fl_services: "Dine-In & Delivery",
@@ -253,6 +256,9 @@ const STRINGS = {
     /* customer menu — content sections */
     about_us: "☕ ስለ እኛ",
     gallery: "ጋለሪ",
+    close: "ዝጋ",
+    previous: "ቀዳሚ",
+    next: "ቀጣይ",
     what_we_serve: "✨ የምናቀርባቸው",
     premium_coffee: "☕ ምርጥ ቡና",
     ethiopian_meals: "🍽 የኢትዮጵያ ምግቦች",
@@ -284,7 +290,7 @@ const STRINGS = {
     hero_cta_menu: "ምናሌ እና ዋጋዎችን ይመልከቱ",
     hero_cta_location: "ያግኙን / QR ይቃኙ",
     hero_hl_brews: "ልዩ ቡናዎች",
-    hero_hl_macchiato: "ታዋቂው የፋና ማኪያቶ",
+    hero_hl_macchiato: "ልዩ ማኪያቶ",
     hero_hl_juices: "ትኩስ የፍራፍሬ ጭማቂዎች",
     hero_hl_spris: "100% ንጹህ ስፕሪስ ጭማቂ",
     hero_hl_dining: "ትክክለኛ የኢትዮጵያ ምግብ",
@@ -295,10 +301,10 @@ const STRINGS = {
     sec_menu: "ትኩስ ጣዕሞች እና ልዩ ቡናዎች",
     sec_why: "ለጥራት፣ ለጣዕም እና ለምቾት የተሰራ",
     sec_how: "አገልግሎት እንዴት እንደሚሰራ",
-    sec_gallery: "በፋና ካፌ ያለፉ ጊዜያት",
-    sec_location: "ፋና ካፌን በ22 ስኩዌር ይጎብኙ",
+    sec_gallery: "በተቋሙ ያለፉ ጊዜያት",
+    sec_location: "ይጎብኙን",
     sec_faq: "በተደጋጋሚ የሚጠየቁ ጥያቄዎች",
-    sec_reviews: "ጎብኚዎች ስለ ፋና ካፌ የሚሉት",
+    sec_reviews: "ጎብኚዎች የሚሉት",
 
     /* homepage — CTA banner */
     cta_badge: "ዛሬ ፋና ካፌን ይጎብኙ",
@@ -364,9 +370,6 @@ export function useT(): (key: StringKey, vars?: Record<string, string>) => strin
 /** Native display translations for seeded menu data. The database's English values
  * remain canonical identifiers, so changing language never changes an order payload. */
 const MENU_AM: Record<string, string> = {
-  "Fana Cafe & Restaurant": "ፋና ካፌ እና ሬስቶራንት",
-  "Fana Cafe": "ፋና ካፌ",
-  "The Famous Fana Macchiato": "ታዋቂው የፋና ማኪያቶ",
   "Mixed Fruit Juice (Spris)": "የተቀላቀለ የፍራፍሬ ጭማቂ (ስፕሪስ)",
   "Chicken Club Sandwich": "የዶሮ ክለብ ሳንድዊች",
   "Traditional Ethiopian Beyaynet Platter": "ባህላዊ የኢትዮጵያ በያይነት",
@@ -406,10 +409,12 @@ const CATEGORY_AM: Record<string, string> = {
  * are persisted in localStorage for instant repeat loads.
  */
 
-const TX_STORAGE_KEY = "fana_tx_am";
-const TX_FLUSH_DELAY_MS = 600;
+const TX_STORAGE_KEY = "tm_tx_am";
+const TX_FLUSH_DELAY_MS = 600; // debounce before the first attempt
+const TX_RETRY_DELAY_MS = 12_000; // quiet retry when a batch failed
 const TX_BATCH_MAX = 120;
 const TX_STORAGE_MAX_ENTRIES = 1500;
+const TX_MAX_ATTEMPTS = 3; // per string, per tab — never hammer Google forever
 
 const GE_EZ_RE = /[\u1200-\u137F]/; // Amharic script already
 
@@ -421,10 +426,12 @@ function txTranslatable(text: string): boolean {
 
 let txCache: Record<string, string> | null = null; // lazy from localStorage
 const txRequested = new Set<string>(); // this tab already asked / received
+const txAttempts = new Map<string, number>(); // failed attempts per string
 const txQueue = new Set<string>();
 const txListeners = new Set<() => void>();
 let txVersion = 0;
 let txTimer: ReturnType<typeof setTimeout> | null = null;
+let txRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let txInFlight = false;
 
 function txLoad(): Record<string, string> {
@@ -463,6 +470,25 @@ function txGetVersion(): number {
   return txVersion;
 }
 
+/** A string failed to translate this time — retry it quietly (bounded). */
+function txRetryLater(texts: string[]): void {
+  for (const s of texts) {
+    txRequested.delete(s); // allow a future registration to re-ask
+    const n = (txAttempts.get(s) ?? 0) + 1;
+    if (n <= TX_MAX_ATTEMPTS) {
+      txAttempts.set(s, n);
+      txQueue.add(s);
+    }
+  }
+  if (txQueue.size > 0) {
+    if (txRetryTimer) return;
+    txRetryTimer = setTimeout(() => {
+      txRetryTimer = null;
+      void txFlush();
+    }, TX_RETRY_DELAY_MS);
+  }
+}
+
 async function txFlush(): Promise<void> {
   if (txInFlight || txQueue.size === 0) return;
   txInFlight = true;
@@ -474,29 +500,38 @@ async function txFlush(): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lang: "am", texts: batch }),
     });
-    if (r.ok) {
-      const data = await r.json();
-      const map = data?.translations;
-      let changed = false;
-      if (map && typeof map === "object") {
-        const cache = txLoad();
-        for (const [k, v] of Object.entries(map as Record<string, string>)) {
-          if (typeof v === "string" && v) {
-            if (cache[k] !== v) changed = true;
-            cache[k] = v;
+    const data = r.ok ? await r.json().catch(() => null) : null;
+    const map = data?.translations;
+    const cache = txLoad();
+    let changed = false;
+    const failed: string[] = [];
+    if (map && typeof map === "object") {
+      // Only strings we actually RECEIVED are done — every other one is
+      // retried, so a Google hiccup can never leave the menu half-English.
+      for (const s of batch) {
+        const v = map[s];
+        if (typeof v === "string" && v) {
+          txRequested.add(s);
+          txAttempts.delete(s);
+          if (cache[s] !== v) {
+            changed = true;
+            cache[s] = v;
           }
-        }
-        // every requested string is marked done — even ones Google couldn't
-        // translate — so we never re-ask for the same text in this tab.
-        for (const s of batch) txRequested.add(s);
-        if (changed) {
-          txPersist();
-          txEmit();
+        } else {
+          failed.push(s);
         }
       }
+    } else {
+      failed.push(...batch); // request failed (offline / 429 / server error)
     }
+    if (changed) {
+      txPersist();
+      txEmit();
+    }
+    if (failed.length) txRetryLater(failed);
   } catch {
-    // offline / server down → keep showing English; retry next registration
+    // offline / server down → keep showing English; retry quietly later
+    txRetryLater(batch);
   } finally {
     txInFlight = false;
     if (txQueue.size > 0) txSchedule(); // leftovers (batch > TX_BATCH_MAX)

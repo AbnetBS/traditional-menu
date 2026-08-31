@@ -16,12 +16,13 @@ export default function VisitSection() {
   const am = lang === "am";
   const { contact, identity } = RESTAURANT;
 
-  const mapsEmbed = `https://www.google.com/maps?q=${encodeURIComponent(
-    `${identity.name}, Addis Ababa`
-  )}&output=embed`;
-  const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    identity.name
-  )}`;
+  // Official Google Maps listing (client-approved). The embed uses the plus
+  // code so the iframe is stable; the “Get directions” button goes to the
+  // official listing URL.
+  const mapsEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(
+    `${contact.plusCode}`
+  )}&z=17&output=embed`;
+  const mapsLink = contact.social.mapsUrl;
 
   return (
     <section id="visit" className="relative overflow-hidden bg-night py-20 sm:py-28">

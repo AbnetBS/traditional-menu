@@ -5,6 +5,7 @@ import AdminPanel from "@/components/AdminPanel";
 import { MenuItem, Category, SiteSettings, Review, GalleryItem } from "@/types";
 import { DEFAULT_SETTINGS, DEFAULT_CATEGORIES, DEFAULT_MENU_ITEMS, DEFAULT_REVIEWS, DEFAULT_GALLERY } from "@/lib/initial-data";
 import { Lock, ShieldAlert, ArrowLeft } from "lucide-react";
+import { RESTAURANT } from "@/lib/restaurant";
 import Link from "next/link";
 
 export default function DedicatedAdminPage() {
@@ -95,7 +96,7 @@ export default function DedicatedAdminPage() {
         <div className="mb-6">
           <Link href="/" className="inline-flex items-center gap-2 text-xs text-[#C9A227] hover:underline bg-white/10 px-4 py-2 rounded-full">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Fana Cafe Website</span>
+            <span>Back to Website</span>
           </Link>
         </div>
 
@@ -104,7 +105,7 @@ export default function DedicatedAdminPage() {
             <div className="w-14 h-14 rounded-2xl bg-[#C9A227] text-[#2C1B17] flex items-center justify-center mx-auto shadow-lg font-bold">
               <Lock className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl font-serif font-bold text-amber-100">Owner Dashboard — Fana Cafe</h1>
+            <h1 className="text-2xl font-serif font-bold text-amber-100">Owner Dashboard — {RESTAURANT.identity.name}</h1>
             <p className="text-xs text-stone-300">Enter your security credentials to access the management dashboard.</p>
           </div>
 

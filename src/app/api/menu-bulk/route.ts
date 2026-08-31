@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         name: r.name,
         category: r.category,
         price: Number(r.price),
-        description: r.description || `${r.name} — freshly prepared daily at Fana Cafe.`,
+        description: r.description || `${r.name} — freshly prepared daily.`,
         imageUrl: STOCK_IMG,
         isPopular: false,
         isAvailable: true,

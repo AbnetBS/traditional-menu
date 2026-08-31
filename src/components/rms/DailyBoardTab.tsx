@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Megaphone, Plus, Trash2, Edit3, RefreshCw, Upload, Calendar } from "lucide-react";
-import { Announcement } from "@/types";
+import { Megaphone, Plus, Trash2, Edit3, RefreshCw, Upload, Calendar, Tag } from "lucide-react";
+import { Announcement, MenuItem } from "@/types";
 import { compressImage } from "@/lib/image-utils";
 
 export default function DailyBoardTab() {
   const [items, setItems] = useState<Announcement[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [editing, setEditing] = useState<Partial<Announcement> | null>(null);
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
     const r = await fetch("/api/announcements");
     if (r.ok) setItems(await r.json());
+    // Plain menu (no promo overlay) — the owner edits stored values here.
+    const m = await fetch("/api/menu");
+    if (m.ok) setMenuItems(await m.json());
   };
 
   useEffect(() => {
@@ -31,8 +35,15 @@ export default function DailyBoardTab() {
     if (r.ok) {
       setEditing(null);
       load();
-    } else alert("Failed to save announcement");
+    } else {
+      // Show the server's clear validation message (e.g. promo price rules).
+      const d = await r.json().catch(() => ({}));
+      alert(d.error || "Failed to save announcement");
+    }
   };
+
+  const linkedItem = (a: Partial<Announcement>) =>
+    a.menuItemId ? menuItems.find((m) => m.id === a.menuItemId) : undefined;
 
   const remove = async (id: number) => {
     if (!confirm("Delete this announcement?")) return;
@@ -76,6 +87,8 @@ export default function DailyBoardTab() {
                 startDate: new Date().toISOString().slice(0, 10),
                 endDate: new Date().toISOString().slice(0, 10),
                 priority: items.length,
+                menuItemId: null,
+                salePrice: null,
               })
             }
             className="bg-[#C9A227] hover:bg-amber-400 text-[#2C1B17] font-bold text-xs uppercase px-4 py-2.5 rounded-xl flex items-center gap-2"
@@ -109,6 +122,15 @@ export default function DailyBoardTab() {
                 {a.imageUrl ? " • 📸 image" : ""}
               </span>
             </div>
+            {a.menuItemId && a.salePrice && (
+              <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1.5">
+                <Tag className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  {a.menuItemName || `Menu item #${a.menuItemId}`} at {a.salePrice} ETB
+                  {a.menuItemBasePrice && a.menuItemBasePrice > a.salePrice ? ` (save ${a.menuItemBasePrice - a.salePrice} ETB)` : ""}
+                </span>
+              </div>
+            )}
             <div className="flex justify-end gap-2">
               <button onClick={() => setEditing(a)} className="p-2 bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black rounded-lg" title="Edit">
                 <Edit3 className="w-4 h-4" />
@@ -166,6 +188,50 @@ export default function DailyBoardTab() {
               <div>
                 <label className="block text-xs font-bold text-amber-200 mb-1">End Date (auto-hides)</label>
                 <input type="date" value={editing.endDate || ""} onChange={(e) => setEditing({ ...editing, endDate: e.target.value })} className="w-full bg-[#3D2314] border border-stone-700 rounded-xl p-3 text-xs text-white" />
+              </div>
+            </div>
+
+            {/* ── PROMO LINK (optional): tie this board item to one menu item ── */}
+            <div className="bg-[#3D2314] rounded-2xl p-4 border border-emerald-700/40 space-y-2.5">
+              <p className="text-xs font-bold text-amber-200 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-emerald-400" /> Promo (optional — link to a menu item)
+              </p>
+              <select
+                value={editing.menuItemId ?? ""}
+                onChange={(e) => {
+                  const id = e.target.value ? Number(e.target.value) : null;
+                  const item = id ? menuItems.find((m) => m.id === id) : undefined;
+                  setEditing({ ...editing, menuItemId: id, salePrice: item ? Math.max(1, Math.floor(item.price * 0.9)) : null });
+                }}
+                className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-3 text-xs text-white"
+              >
+                <option value="">— No linked item —</option>
+                {menuItems.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.price} ETB)
+                  </option>
+                ))}
+              </select>
+              {linkedItem(editing) !== undefined && (
+                <p className="text-[11px] text-stone-400">
+                  Linked: <span className="text-emerald-300 font-bold">{linkedItem(editing)?.name}</span>
+                  {" "}· normal price {linkedItem(editing)?.price} ETB
+                </p>
+              )}
+              <div>
+                <label className="block text-[11px] font-bold text-amber-200 mb-1">Promo price (ETB, below normal price)</label>
+                <input
+                  type="number"
+                  min={1}
+                  disabled={!editing.menuItemId}
+                  value={editing.salePrice ?? ""}
+                  onChange={(e) => setEditing({ ...editing, salePrice: e.target.value ? Number(e.target.value) : null })}
+                  placeholder={editing.menuItemId ? "e.g. 500" : "Link a menu item first"}
+                  className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-3 text-xs text-white disabled:opacity-40"
+                />
+                <p className="text-[10px] text-stone-500 mt-1">
+                  While this board item is live, customers see and order the linked dish at this price — the cart and ticket use it automatically.
+                </p>
               </div>
             </div>
 

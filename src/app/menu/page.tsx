@@ -7,8 +7,8 @@ export default function CustomerMenuPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center text-[#4E342E] text-sm font-bold">
-          Loading menu...
+        <div className="tm-root min-h-screen flex items-center justify-center text-sm font-bold text-[#a98c5f]">
+          <span className="tm-seal mx-auto h-12 w-12 animate-pulse" />
         </div>
       }
     >

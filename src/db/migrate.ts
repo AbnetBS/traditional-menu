@@ -16,7 +16,7 @@ import { sql } from "drizzle-orm";
  * once and stamps the new version. Existing DBs self-heal on the first
  * request after a deploy — no manual action needed.
  */
-const SCHEMA_VERSION = "2026-08-27-split-billing";
+const SCHEMA_VERSION = "2026-08-31-daily-board-promos";
 
 /**
  * UNIVERSAL self-healing schema manager — works on ANY Postgres database
@@ -216,6 +216,8 @@ const RMS_CREATES: Array<[string, string]> = [
       start_date text,
       end_date text,
       priority integer DEFAULT 0,
+      menu_item_id integer,
+      sale_price integer,
       created_at timestamp DEFAULT now()
     )`,
   ],
@@ -331,7 +333,7 @@ const RMS_COLUMNS: Record<string, Record<string, ColSpec>> = {
 
 const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
   orders: {
-    order_number: { type: "text", def: "'FANA-ORD-000000'" },
+    order_number: { type: "text", def: "'TOTOT-ORD-000000'" },
     customer_name: { type: "text", def: "'Guest'" },
     phone: { type: "text", def: "''" },
     order_type: { type: "text", def: "'delivery'" },
@@ -365,10 +367,13 @@ const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
     start_date: { type: "text" },
     end_date: { type: "text" },
     priority: { type: "integer", def: "0", castText: true },
+    // Daily Board promotion target: one existing menu item + promo price.
+    menu_item_id: { type: "integer", castText: true },
+    sale_price: { type: "integer", castText: true },
     created_at: { type: "timestamp", def: "now()", dropNotNull: true },
   },
   reservations: {
-    reservation_number: { type: "text", def: "'FANA-RES-000000'" },
+    reservation_number: { type: "text", def: "'TOTOT-RES-000000'" },
     guest_name: { type: "text", def: "'Guest'" },
     phone: { type: "text", def: "''" },
     email: { type: "text" },
@@ -412,11 +417,11 @@ const TABLE_COLUMNS: Record<string, Record<string, ColSpec>> = {
 // per minute was the #1 speed bottleneck (10s+ first loads on Vercel+Neon).
 // It only needs to run ONCE per server instance; /api/setup?force=1 re-runs it.
 const globalForMigrate = globalThis as typeof globalThis & {
-  __fanaMigrateDone?: boolean;
+  __restaurantMigrateDone?: boolean;
   // Shared promise so CONCURRENT first requests (e.g. the homepage's 5 parallel
   // fetches right after a cold start) collapse into ONE migration run instead of
   // each running the full CREATE/ALTER storm.
-  __fanaMigratePromise?: Promise<{ success: boolean; errors: string[] }> | null;
+  __restaurantMigratePromise?: Promise<{ success: boolean; errors: string[] }> | null;
 };
 
 /** The actual migration body (health probe + full CREATE/ALTER/sequence repair). */
@@ -435,7 +440,7 @@ async function runFullMigrate(force: boolean) {
         );
         const rows = (probe as unknown as { rows?: Array<{ value: string }> }).rows ?? [];
         if (rows.length > 0 && rows[0].value === SCHEMA_VERSION) {
-          globalForMigrate.__fanaMigrateDone = true;
+          globalForMigrate.__restaurantMigrateDone = true;
           break returnOnWarm;
         }
         // missing row OR stale version → run the full migration below
@@ -509,12 +514,13 @@ async function runFullMigrate(force: boolean) {
   }
 
   // Step 4 — Group 1 integrity constraints:
-  //  • order_number = FANA-<id> (guaranteed unique — derived from the DB serial, never random)
+  //  • order_number = TOTOT-<id> (guaranteed unique — derived from the DB serial, never random)
   //  • unique (ticket_id, idempotency_key) on ticket_items: each submission stores
   //    per-item derived keys (<key>#<index>), so a retry/double-tap of the same
   //    submission can never be inserted twice, while separate submissions of the
   //    same table bill (customer orders again) stay allowed.
-  await run(`UPDATE tickets SET order_number = 'FANA-' || id WHERE order_number IS NULL OR order_number = ''`);
+  await run(`UPDATE tickets SET order_number = 'TOTOT-' || id WHERE order_number IS NULL OR order_number = ''`);
+  await run(`UPDATE tickets SET order_number = 'TOTOT-' || id WHERE order_number ~ '^FANA-'`);
   await run(
     `CREATE UNIQUE INDEX IF NOT EXISTS tickets_order_number_key ON tickets (order_number) WHERE order_number IS NOT NULL AND order_number <> ''`
   );
@@ -615,34 +621,11 @@ async function runFullMigrate(force: boolean) {
     );
   }
 
-  //  • OWNER REQUEST (2026-08-25) — the cafe is in TOWN SQUARE BUILDING, not
-  //    "Golagul Building", and the business name is the full "Fana Cafe &
-  //    Restaurant". One-time idempotent heal of every historical row that still
-  //    carries the wrong building/name (re-running changes nothing afterwards).
-  await run(`
-    UPDATE site_settings SET value = regexp_replace(
-      regexp_replace(
-        regexp_replace(value, 'Golagul\\s+Bldg\\.?', 'Town Square Bldg', 'gi'),
-        'Golagul\\s+Building', 'Town Square Building', 'gi'),
-      'Golagul', 'Town Square', 'gi')
-    WHERE value ~* 'golagul'
-  `);
-  await run(`
-    UPDATE gallery_items SET title = regexp_replace(title, 'Golagul\\s+Building', 'Town Square Building', 'gi')
-    WHERE title ~* 'golagul'
-  `);
-  await run(`
-    UPDATE announcements SET
-      title = regexp_replace(title, 'Golagul\\s+Building', 'Town Square Building', 'gi'),
-      description = regexp_replace(description, 'Golagul\\s+Building', 'Town Square Building', 'gi')
-    WHERE title ~* 'golagul' OR description ~* 'golagul'
-  `);
-  await run(`
-    UPDATE site_settings SET value = 'Fana Cafe & Restaurant', updated_at = now()
-    WHERE key = 'cafe_name'
-      AND value ~* '^\\s*fana(queen)?\\s*cafe(\\s*&\\s*restaurant)?\\s*$'
-      AND value <> 'Fana Cafe & Restaurant'
-  `);
+  //  • LEGACY VENUE HEALING REMOVED — this deployment serves the configured
+  //    business only (see src/lib/restaurant.ts). No stored row is rewritten
+  //    with another venue's name/address: the brand guard (src/lib/brand.ts)
+  //    repairs carried-over legacy venue text at READ time, so a migrated
+  //    database can never leak (or be rewritten with) another business's data.
 
   if (errors.length > 0) {
     console.error("ensureTablesExist errors:", errors);
@@ -657,37 +640,37 @@ async function runFullMigrate(force: boolean) {
     `INSERT INTO site_settings (key, value, updated_at) VALUES ('schema_version', '${SCHEMA_VERSION}', now()) ON CONFLICT (key) DO UPDATE SET value = '${SCHEMA_VERSION}', updated_at = now()`
   );
 
-  globalForMigrate.__fanaMigrateDone = true;
+  globalForMigrate.__restaurantMigrateDone = true;
   return { success: true, errors: [] as string[] };
 }
 
 export async function ensureTablesExist(force = false) {
-  if (globalForMigrate.__fanaMigrateDone && !force) {
+  if (globalForMigrate.__restaurantMigrateDone && !force) {
     return { success: true, errors: [] as string[] };
   }
 
   if (force) {
     // Explicit repair paths (/api/setup?force=1, image uploads) bypass the memo
     // and run a fresh migration, independent of any in-flight run.
-    globalForMigrate.__fanaMigrateDone = false;
-    globalForMigrate.__fanaMigratePromise = null;
+    globalForMigrate.__restaurantMigrateDone = false;
+    globalForMigrate.__restaurantMigratePromise = null;
     return runFullMigrate(true);
   }
 
   // Shared promise: the FIRST caller runs the migration (or the one-query health
   // probe on a healthy DB); concurrent first callers await the same result instead
   // of each executing the full CREATE/ALTER storm.
-  if (!globalForMigrate.__fanaMigratePromise) {
-    globalForMigrate.__fanaMigratePromise = runFullMigrate(false)
+  if (!globalForMigrate.__restaurantMigratePromise) {
+    globalForMigrate.__restaurantMigratePromise = runFullMigrate(false)
       .then((res) => {
-        if (res.success) globalForMigrate.__fanaMigrateDone = true;
+        if (res.success) globalForMigrate.__restaurantMigrateDone = true;
         return res;
       })
       .finally(() => {
-        globalForMigrate.__fanaMigratePromise = null;
+        globalForMigrate.__restaurantMigratePromise = null;
       });
   }
-  return globalForMigrate.__fanaMigratePromise;
+  return globalForMigrate.__restaurantMigratePromise;
 }
 
 /** Report per-table health for /api/setup. */
@@ -707,10 +690,10 @@ export async function insertSmokeTest() {
 
   let err = await run(
     `INSERT INTO orders (order_number, customer_name, phone, order_type, address, items, total_amount, status, notes)
-     VALUES ('FANA-TEST-000001','Setup Test','0911065022','delivery','Test Address','[]',1,'pending','smoke test')`
+     VALUES ('TOTOT-TEST-000001','Setup Test','0911065022','delivery','Test Address','[]',1,'pending','smoke test')`
   );
   if (!err) {
-    await run(`DELETE FROM orders WHERE order_number = 'FANA-TEST-000001'`);
+    await run(`DELETE FROM orders WHERE order_number = 'TOTOT-TEST-000001'`);
     results.orders = "INSERT OK";
   } else {
     results.orders = `INSERT FAILED: ${err}`;
@@ -729,10 +712,10 @@ export async function insertSmokeTest() {
 
   err = await run(
     `INSERT INTO reservations (reservation_number, guest_name, phone, date, time, party_size, table_preference, status)
-     VALUES ('FANA-TEST-000002','Setup Test','0911065022','2026-01-01','12:00 PM',2,'Indoor','confirmed')`
+     VALUES ('TOTOT-TEST-000002','Setup Test','0911065022','2026-01-01','12:00 PM',2,'Indoor','confirmed')`
   );
   if (!err) {
-    await run(`DELETE FROM reservations WHERE reservation_number = 'FANA-TEST-000002'`);
+    await run(`DELETE FROM reservations WHERE reservation_number = 'TOTOT-TEST-000002'`);
     results.reservations = "INSERT OK";
   } else {
     results.reservations = `INSERT FAILED: ${err}`;

@@ -11,8 +11,8 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      q: "What are Fana Cafe's opening hours?",
-      a: "Fana Cafe is open daily until 8:30 PM in Addis Ababa. Operating hours may vary slightly during Ethiopian public holidays. Call 0911 065 022 for holiday hours.",
+      q: "What are the opening hours?",
+      a: "We are open around the clock — 24 hours a day. Operating hours may vary slightly during Ethiopian public holidays. Call 011 646 0718 for holiday hours.",
     },
     {
       q: "Can I order foods and drinks for delivery or takeaway?",
@@ -23,12 +23,12 @@ export default function FaqSection() {
       a: "You can reserve a table by clicking the 'Reserve Table' button on this page. Choose your preferred date, time, party size, and table setting (Indoor, Garden, Quiet Corner, or Window View). Your table will be held for you.",
     },
     {
-      q: "What are Fana Cafe's most popular menu items?",
-      a: "Our signature Fana Macchiato and Jebena Ethiopian Coffee are loved by local coffee connoisseurs. For food and juices, our Chicken Club Sandwich, Chechebsa, and thick multi-layered Mixed Fruit Juice (Spris) are customer favorites.",
+      q: "What are the most popular menu items?",
+      a: "Our Special Kitfo, Shekla Tibs and Doro Wat are the favourites, and the jebena buna ceremony is a must.",
     },
     {
-      q: "Is Fana Cafe suitable for remote work or business meetings?",
-      a: "Absolutely! Fana Cafe provides a calm, comfortable environment with relaxed seating, ideal lighting, and great coffee—making it a favorite spot for business meetings, study sessions, and remote work.",
+      q: "Is Totot suitable for groups or celebrations?",
+      a: "Absolutely! With shared platters, live traditional music and dance, and group feast packages, Totot is built for families, celebrations and tours.",
     },
     {
       q: "Are vegetarian, vegan, and fasting options available?",

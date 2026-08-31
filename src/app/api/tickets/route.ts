@@ -5,6 +5,8 @@ import { computeBalance } from "@/lib/split-billing";
 import { ensureTablesExist } from "@/db/migrate";
 import { DEFAULT_CATEGORY_ROUTING } from "@/lib/initial-data";
 import { effectivePrice } from "@/lib/price";
+import { getLiveMenuPromos } from "@/lib/daily-board";
+import { applyPromosToItems } from "@/lib/promotions";
 import { eq, asc, desc, and, notInArray, inArray } from "drizzle-orm";
 import { deleteOrphanedCdnImages, persistImageRef } from "@/lib/image-store";
 import { requireStaffOrAdmin, requireAdmin } from "@/lib/session";
@@ -228,11 +230,11 @@ export async function POST(request: Request) {
           })
           .returning();
         ticketId = created[0].id;
-        // Guaranteed-unique order number — derived from the DB serial (FANA-<id>),
+        // Guaranteed-unique order number — derived from the DB serial (TOTOT-<id>),
         // never random, so collisions are impossible by construction.
         await tx
           .update(tickets)
-          .set({ orderNumber: `FANA-${ticketId}` })
+          .set({ orderNumber: `TOTOT-${ticketId}` })
           .where(eq(tickets.id, ticketId));
       } catch (err) {
         // GROUP 5 — one-active-bill-per-table is enforced by a partial UNIQUE
@@ -271,10 +273,10 @@ export async function POST(request: Request) {
     // ── PRICE & QUANTITY INTEGRITY (server-side authority) ──
     // The client sends menuItemId; the authoritative unit price is resolved
     // from the menu server-side (including active sale pricing via
-    // effectivePrice) and quantities are validated, so a manipulated client —
-    // including an anonymous POST to the public customer endpoint — cannot
-    // submit negative/arbitrary prices or absurd quantities that would corrupt
-    // bills, revenue, and reports.
+    // effectivePrice AND live Daily Board promotions) and quantities are
+    // validated, so a manipulated client — including an anonymous POST to the
+    // public customer endpoint — cannot submit negative/arbitrary prices or
+    // absurd quantities that would corrupt bills, revenue, and reports.
     const orderedMenuIds: number[] = [];
     const seenIds = new Set<number>();
     for (const it of items) {
@@ -288,7 +290,11 @@ export async function POST(request: Request) {
       orderedMenuIds.length > 0
         ? await tx.select().from(menuItems).where(inArray(menuItems.id, orderedMenuIds))
         : [];
-    const priceById = new Map(menuRows.map((m) => [m.id, effectivePrice(m).price]));
+    // Live Daily Board promos are part of the pricing authority, so the bill
+    // matches the promo price the customer saw on the menu.
+    const priceById = new Map(
+      applyPromosToItems(menuRows, await getLiveMenuPromos()).map((m) => [m.id, effectivePrice(m).price])
+    );
 
     for (const it of items) {
       const qty = Number(it.quantity);

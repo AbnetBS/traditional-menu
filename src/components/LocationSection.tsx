@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPin, Phone, Clock, Navigation, Copy, Check, ExternalLink, Calendar } from "lucide-react";
 import { SiteSettings } from "@/types";
 import { useT, useAutoT } from "@/lib/i18n";
+import { RESTAURANT } from "@/lib/restaurant";
 
 interface LocationProps {
   settings: SiteSettings;
@@ -25,7 +26,7 @@ export default function LocationSection({ settings }: LocationProps) {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const mapDirectionsUrl = "https://www.google.com/maps/place/Fana+cafe/@9.0148457,38.7875868,17z";
+  const mapDirectionsUrl = RESTAURANT.contact.social.mapsUrl;
 
   return (
     <section id="contact" className="py-20 bg-[#FAF6F0] relative">
@@ -143,8 +144,8 @@ export default function LocationSection({ settings }: LocationProps) {
             </div>
             <div className="flex-1 w-full bg-stone-200 relative">
               <iframe
-                title="Fana Cafe 22 Square Google Maps Location"
-                src="https://maps.google.com/maps?q=9.0148457,38.7875868&hl=es&z=17&output=embed"
+                title={`${RESTAURANT.identity.name} Google Maps Location`}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(RESTAURANT.contact.plusCode)}&z=17&output=embed`}
                 className="w-full h-full min-h-[280px] border-0"
                 loading="lazy"
                 allowFullScreen

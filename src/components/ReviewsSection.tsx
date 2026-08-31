@@ -23,7 +23,7 @@ export default function ReviewsSection({ reviews, onReviewSubmitted }: ReviewsPr
     "Calm Atmosphere",
     "Cozy Cafe Vibe",
     "Refreshing Fruit Punches",
-    "The Famous Fana Macchiato",
+    "Special Kitfo",
     "Friendly Staff",
     "Attractive Views & Seating",
   ].map(tx);
@@ -73,7 +73,7 @@ export default function ReviewsSection({ reviews, onReviewSubmitted }: ReviewsPr
           </h2>
 
           <p className="text-stone-600 text-sm sm:text-base mt-3">
-            {tx("Real feedback and ratings from Google Maps Local Guides visiting Fana Cafe at Town Square Building, 22 Square, Addis Ababa.")}
+            {tx("Real feedback from guests visiting Totot Traditional Food Hall at Gerji, Addis Ababa.")}
           </p>
         </div>
 
@@ -181,7 +181,7 @@ export default function ReviewsSection({ reviews, onReviewSubmitted }: ReviewsPr
           <div className="bg-[#2C1B17] rounded-3xl p-6 max-w-md w-full border border-[#C9A227] shadow-2xl text-white">
             
             <div className="flex justify-between items-center pb-4 border-b border-stone-800">
-              <h3 className="font-serif font-bold text-lg text-amber-100">{tx("Leave Feedback for Fana Cafe & Restaurant")}</h3>
+              <h3 className="font-serif font-bold text-lg text-amber-100">{tx("Leave Feedback for Totot Traditional Food Hall")}</h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-stone-400 hover:text-white"

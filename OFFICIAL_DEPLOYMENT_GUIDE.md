@@ -1,7 +1,7 @@
-# 🚀 OFFICIAL DEPLOYMENT GUIDE — Make Fana Cafe a Real Live Website
+# 🚀 OFFICIAL DEPLOYMENT GUIDE — Make Your Restaurant a Real Live Website
 # (No more localhost problems — deploy once, works forever)
 
-This guide turns the code into an official website like **https://fanacafe.com**
+This guide turns the code into an official website (**set the real domain once the client approves it**)
 with a real cloud database, admin dashboard, and 24/7 online orders.
 
 Recommended stack (current plan):
@@ -14,14 +14,14 @@ Recommended stack (current plan):
 ════════════════════════════════════════
 STEP 1 — PUSH THE CODE TO GITHUB (5 minutes)
 ════════════════════════════════════════
-1. Create a repository on GitHub (e.g. "fana-cafe").
+1. Create a repository on GitHub (e.g. "your-project").
 2. In this project folder, open a terminal and run:
 
    git init
    git add .
-   git commit -m "Fana Cafe official website"
+   git commit -m "Restaurant website"
    git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/fana-cafe.git
+   git remote add origin https://github.com/YOUR_USERNAME/your-project.git
    git push -u origin main
 
 IF THIS STEP ALREADY FAILED BEFORE: delete the old "node_modules" and ".next"
@@ -30,7 +30,7 @@ folders from the repo on GitHub (they should never be uploaded; .gitignore handl
 ════════════════════════════════════════
 STEP 2 — CREATE THE CLOUD DATABASE (Supabase) (5 minutes)
 ════════════════════════════════════════
-1. Go to https://supabase.com → create a new project → name it "fana-cafe".
+1. Go to https://supabase.com → create a new project → name it "your-project".
 2. In Project Settings → Database, copy the "Connection string" (URI). It looks like:
    postgresql://postgres.YOUR_PROJECT:YOUR_PASSWORD@aws-0-region.pooler.supabase.com:6543/postgres
    THIS IS YOUR OFFICIAL DATABASE_URL — keep it safe.
@@ -41,11 +41,11 @@ STEP 2 — CREATE THE CLOUD DATABASE (Supabase) (5 minutes)
 ════════════════════════════════════════
 STEP 3 — DEPLOY TO RAILWAY (5 minutes)
 ════════════════════════════════════════
-1. Go to https://railway.app → New Project → Deploy from GitHub → import "fana-cafe".
+1. Go to https://railway.app → New Project → Deploy from GitHub → import "your-project".
 2. Before (or right after) deploying, open the service's "Variables" and add ALL THREE:
 
    DATABASE_URL  =  <paste your Supabase/Postgres connection string from Step 2>
-   ADMIN_PASSWORD = <choose a STRONG secret password, e.g. Fana#Owner2026>
+   ADMIN_PASSWORD = <choose a STRONG secret password>
    SESSION_SECRET = <a long random string, e.g. run:  openssl rand -base64 32>
 
    ⚠️ ALL THREE ARE REQUIRED IN PRODUCTION.
@@ -77,27 +77,28 @@ STEP 3 — DEPLOY TO RAILWAY (5 minutes)
 ✅ Customers never see raw errors — just a friendly "call us" message.
 
 ════════════════════════════════════════
-STEP 4 — CONNECT YOUR OWN DOMAIN (fanacafe.com) (optional, ~$10/year)
+STEP 4 — CONNECT YOUR OWN DOMAIN (after the client approves one) (optional, ~$10/year)
 ════════════════════════════════════════
-1. Buy "fanacafe.com" from Namecheap, GoDaddy, or any registrar.
-2. In Railway → your service → Settings → Networking → "Custom Domain" → add "fanacafe.com".
+1. Buy the client-approved domain from Namecheap, GoDaddy, or any registrar (never guess/buy a domain).
+2. Add the approved domain to your host (Railway/Coolify) custom domain settings.
 3. Railway shows the DNS records (CNAME + verification). Copy them into your
    registrar's DNS page.
-4. Wait 5–30 minutes → https://fanacafe.com is LIVE with free HTTPS.
+4. Wait 5–30 minutes → the approved domain is LIVE with free HTTPS.
 
-   Then also set  NEXT_PUBLIC_SITE_URL = https://fanacafe.com  so the sitemap
-   and robots.txt use your real domain.
+   Then set  NEXT_PUBLIC_SITE_URL = https://your-domain.example  in Coolify
+   (or your host’s environment variables) so the sitemap, robots.txt and
+   structured data use your real domain — only after the client approves it.
 
 ════════════════════════════════════════
 HOW THE CAFE RUNS IT DAILY (owner manual)
 ════════════════════════════════════════
-• Site manager opens  https://fanacafe.com/admin  on any phone/computer.
+• Site manager opens  https://your-domain.example/admin  on any phone/computer.
   Password = the ADMIN_PASSWORD from Railway env (changeable in Settings tab).
 • Edit menu / prices / photos (upload from phone!) → Menu & Food Photos tab.
 • Edit hero background → Website Copy & Hero Photo tab.
 • Edit gallery photos → Gallery Manager tab.
 • New orders & table reservations ring a DESKTOP POPUP alert in the admin tab.
-• Google Maps info already filled: 2Q7Q+W2, 0911 065 022, 22 Square Town Square Bldg.
+• Google Maps info: set the client-approved phone/address/plus code from the owner dashboard (never copy another business’s).
 • Old receipt photos are cleared automatically every 24h (30+ days old) to save
   database space — no action needed.
 

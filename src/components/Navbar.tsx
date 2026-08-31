@@ -5,6 +5,7 @@ import { Lock, Menu, X, Phone, ShieldCheck } from "lucide-react";
 import { SiteSettings } from "@/types";
 import { fixBrandText } from "@/lib/brand";
 import { useT, useAutoT } from "@/lib/i18n";
+import { RESTAURANT } from "@/lib/restaurant";
 
 interface NavbarProps {
   settings: SiteSettings;
@@ -19,8 +20,8 @@ export default function Navbar({ settings, onOpenAdmin, isAdminLoggedIn }: Navba
   const tx = useAutoT();
 
   const phone = settings.phone || "0911 065 022";
-  const cafeName = fixBrandText(settings.cafe_name || "Fana Cafe & Restaurant");
-  const announcement = settings.announcement || "☕ Welcome to Fana Cafe & Restaurant!";
+  const cafeName = fixBrandText(settings.cafe_name || RESTAURANT.identity.name);
+  const announcement = settings.announcement || "☕ Welcome to Totot Traditional Food Hall!";
 
   const navLinks = [
     { label: t("nav_home"), href: "#hero" },
@@ -64,7 +65,7 @@ export default function Navbar({ settings, onOpenAdmin, isAdminLoggedIn }: Navba
           {/* Logo */}
           <a href="#hero" onClick={(e) => handleNavClick(e, "#hero")} className="flex items-center gap-3 group">
             <img
-              src={String(settings.logo_url || "/logo.png")}
+              src={String(settings.logo_url || RESTAURANT.identity.defaultLogo)}
               alt={cafeName}
               className="w-11 h-11 rounded-full object-contain bg-white border-2 border-[#C9A227] shadow-md group-hover:scale-105 transition-transform p-0.5"
             />

@@ -20,7 +20,7 @@ export default function TablesQrTab() {
     if (tRes.ok) setTables(await tRes.json());
     if (sRes.ok) {
       const s = await sRes.json();
-      // If owner saved a stable domain (e.g. https://fanacafe.com), use it for ALL QR codes
+      // If owner saved a stable domain (set when the client approves one), use it for ALL QR codes
       const saved = String(s.qr_base_url || "");
       setCustomBase(saved);
       setBaseUrl(saved || window.location.origin);
@@ -97,7 +97,7 @@ export default function TablesQrTab() {
         <p className="text-xs text-stone-400 leading-relaxed">
           QRs currently encode: <strong className="text-[#C9A227]">{baseUrl || "..."}</strong>
           {" "}— leave empty to auto-use the site you're currently on. For permanent printed QRs, enter your final domain
-          (e.g. <code className="text-amber-300">https://fanacafe.com</code>) and save, then print once.
+          (e.g. <code className="text-amber-300">https://your-domain.example</code>) and save, then print once.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
@@ -173,7 +173,7 @@ export default function TablesQrTab() {
       <div className="bg-[#2C1B17] rounded-2xl border border-stone-800 p-4 flex items-start gap-3">
         <QrCode className="w-5 h-5 text-[#C9A227] shrink-0 mt-0.5" />
         <p className="text-xs text-stone-400 leading-relaxed">
-          <strong className="text-white">Printing tip:</strong> use the Print button once your real domain (e.g. fanacafe.com) is connected,
+          <strong className="text-white">Printing tip:</strong> use the Print button once your real approved domain (e.g. https://your-domain.example) is connected,
           so the QR codes encode your permanent URL — they never need replacing.
         </p>
       </div>

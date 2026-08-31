@@ -356,3 +356,303 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CUSTOMER QR MENU — "CARVED MESOB" SURFACE THEME
+   ═══════════════════════════════════════════════════════════════════════════
+   A premium Ethiopian-traditional skin for the customer ordering app ONLY.
+   Language: dark carved wood room + parchment menus + aged-gold ornament.
+   Everything is mobile-first, touch-sized, and deliberately subtle — the
+   culture frames the food; it never hides it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.tm-root {
+  --tm-wood-950: #160e09;
+  --tm-wood-900: #1f1410;
+  --tm-wood-800: #2b1b13;
+  --tm-wood-700: #3c2718;
+  --tm-wood-600: #55331d;
+  --tm-parchment: #f3e9d6;
+  --tm-parchment-deep: #eaddc2;
+  --tm-parchment-lit: #fbf5e8;
+  --tm-ink: #2e1d12;
+  --tm-ink-soft: #6d563f;
+  --tm-gold: #b8955a;
+  --tm-gold-lit: #d8b97e;
+  --tm-terra: #9a4e32;
+  --tm-terra-lit: #b8603d;
+  --tm-red: #8f3b2c;
+  --tm-green: #45653f;
+
+  min-height: 100vh;
+  color: var(--tm-ink);
+  background-color: var(--tm-wood-950);
+  background-image:
+    radial-gradient(120% 55% at 50% -12%, rgba(184, 149, 90, 0.08), transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none'%3E%3Cpath d='M44 4 84 44 44 84 4 44Z' stroke='%23B8955A' stroke-width='1' opacity='.06'/%3E%3Cpath d='M44 22 66 44 44 66 22 44Z' stroke='%239A4E32' stroke-width='1' opacity='.05'/%3E%3Ccircle cx='44' cy='44' r='2' fill='%23B8955A' opacity='.07'/%3E%3C/g%3E%3C/svg%3E"),
+    repeating-linear-gradient(92deg, rgba(255, 226, 184, 0.015) 0 1px, transparent 1px 7px);
+  background-size: auto, 88px 88px, auto;
+}
+
+/* ── Carved panels ─────────────────────────────────────────────────────── */
+
+/* Parchment menu card: dark wood edge + inner gold hairline. */
+.tm-panel {
+  position: relative;
+  background: linear-gradient(180deg, var(--tm-parchment-lit) 0%, var(--tm-parchment) 55%, var(--tm-parchment-deep) 100%);
+  border: 1px solid #3a2416;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 226, 0.6),
+    0 14px 30px -18px rgba(0, 0, 0, 0.75);
+}
+.tm-panel::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(184, 149, 90, 0.55);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+/* Dark carved-wood panel: for headers, promos, cart, footers. */
+.tm-panel-wood {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(184, 149, 90, 0.05), transparent 30%),
+    linear-gradient(180deg, #38240f 0%, #2a1a10 60%, #20130c 100%);
+  border: 1px solid #0e0805;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(216, 185, 126, 0.25), 0 16px 34px -20px rgba(0, 0, 0, 0.85);
+}
+.tm-panel-wood::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(184, 149, 90, 0.4);
+  border-radius: 7px;
+  pointer-events: none;
+}
+
+/* Carved corners (place inside position:relative parent). */
+.tm-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  color: rgba(184, 149, 90, 0.95);
+  pointer-events: none;
+  z-index: 3;
+}
+.tm-corner-tl { top: -5px; left: -5px; }
+.tm-corner-tr { top: -5px; right: -5px; transform: rotate(90deg); }
+.tm-corner-br { bottom: -5px; right: -5px; transform: rotate(180deg); }
+.tm-corner-bl { bottom: -5px; left: -5px; transform: rotate(270deg); }
+
+/* ── Ornamental divider ────────────────────────────────────────────────── */
+.tm-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--tm-gold);
+}
+.tm-divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(184, 149, 90, 0.65), transparent);
+}
+.tm-divider-motif {
+  width: 56px;
+  height: 12px;
+  flex: none;
+}
+.tm-divider-dark {
+  color: rgba(216, 185, 126, 0.9);
+}
+.tm-divider-dark .tm-divider-line {
+  background: linear-gradient(90deg, transparent, rgba(216, 185, 126, 0.5), transparent);
+}
+
+/* ── Logo seal (mesob ring) ────────────────────────────────────────────── */
+.tm-seal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 38%, #3b2414, #1c110a 78%);
+  border: 1px solid rgba(184, 149, 90, 0.55);
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.45), 0 6px 14px -8px rgba(0, 0, 0, 0.9);
+}
+.tm-seal-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--tm-gold);
+}
+.tm-seal-img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  border-radius: 9999px;
+}
+
+/* ── Chips / tabs (carved wood labels) ─────────────────────────────────── */
+.tm-chip {
+  border: 1px solid rgba(184, 149, 90, 0.38);
+  background: linear-gradient(180deg, #4a3118 0%, #31200f 100%);
+  color: #e8d8b5;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 200, 0.14),
+    0 4px 10px -6px rgba(0, 0, 0, 0.7);
+}
+.tm-chip-active {
+  border-color: rgba(216, 185, 126, 0.95);
+  background: linear-gradient(180deg, var(--tm-terra-lit) 0%, var(--tm-terra) 100%);
+  color: #fdf3e0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 14px -8px rgba(0, 0, 0, 0.75);
+}
+.tm-chip-available {
+  border-color: rgba(184, 149, 90, 0.5);
+  color: var(--tm-ink);
+  background: linear-gradient(180deg, var(--tm-parchment-lit), var(--tm-parchment));
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.tm-btn {
+  background: linear-gradient(180deg, var(--tm-terra-lit) 0%, var(--tm-terra) 100%);
+  color: #fdf2df;
+  border: 1px solid rgba(216, 185, 126, 0.6);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 18px -10px rgba(0, 0, 0, 0.7);
+}
+.tm-btn:active {
+  transform: translateY(1px);
+}
+.tm-btn-gold {
+  background: linear-gradient(180deg, #d8b97e 0%, #b8955a 60%, #97783f 100%);
+  color: #241407;
+  border: 1px solid rgba(62, 40, 18, 0.75);
+  border-radius: 9px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 224, 0.5),
+    0 8px 18px -10px rgba(0, 0, 0, 0.7);
+}
+.tm-btn-ghost {
+  border: 1px solid rgba(184, 149, 90, 0.55);
+  background: rgba(184, 149, 90, 0.12);
+  color: var(--tm-gold-lit);
+  border-radius: 9px;
+}
+.tm-btn-dimm {
+  background: linear-gradient(180deg, #6b4f33, #4a311c);
+  border: 1px solid rgba(184, 149, 90, 0.25);
+  color: #f0e2c4;
+  border-radius: 9px;
+}
+
+/* ── Inputs (parchment) ────────────────────────────────────────────────── */
+.tm-input {
+  background: var(--tm-parchment-lit);
+  border: 1px solid #3a2416;
+  border-radius: 8px;
+  color: var(--tm-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(184, 149, 90, 0.35),
+    0 10px 22px -16px rgba(0, 0, 0, 0.7);
+}
+.tm-input::placeholder {
+  color: #a08567;
+}
+.tm-input:focus {
+  outline: 2px solid rgba(184, 149, 90, 0.65);
+  outline-offset: 1px;
+}
+
+/* ── Photo frame: thin dark wood + gold hairline, corners carved ───────── */
+.tm-photo {
+  position: relative;
+  background: linear-gradient(180deg, #33200f 0%, #1c110a 100%);
+  border: 1px solid #0d0704;
+  border-radius: 9px;
+  padding: 4px;
+  box-shadow: inset 0 0 0 1px rgba(184, 149, 90, 0.35), 0 10px 22px -14px rgba(0, 0, 0, 0.8);
+}
+.tm-photo img {
+  display: block;
+  width: 100%;
+  border-radius: 5px;
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────── */
+.tm-head {
+  font-family: var(--font-display);
+  color: var(--tm-ink);
+  letter-spacing: 0.005em;
+}
+.tm-head-dark {
+  color: #f2e4c6;
+}
+.tm-eyebrow {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--tm-terra);
+}
+.tm-eyebrow-gold {
+  color: var(--tm-gold);
+}
+.tm-dish-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--tm-ink);
+}
+
+/* Engraved gold text (dark surfaces only). */
+.tm-engraved {
+  background: linear-gradient(180deg, #e7c98f 0%, var(--tm-gold-lit) 40%, var(--tm-gold) 70%, #8c6d3c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Sticky toolbar (search + categories) ──────────────────────────────── */
+.tm-toolbar {
+  background: rgba(31, 19, 12, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(184, 149, 90, 0.28);
+  box-shadow: 0 10px 26px -18px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Misc ──────────────────────────────────────────────────────────────── */
+.tm-soft-shadow {
+  box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.8);
+}
+.tm-scroll-x {
+  scrollbar-width: none;
+}
+.tm-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+.tm-texture-through {
+  position: relative;
+}
+.tm-texture-through::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(184, 149, 90, 0.05), transparent 34%),
+    radial-gradient(circle at 82% 68%, rgba(154, 78, 50, 0.05), transparent 38%);
+}

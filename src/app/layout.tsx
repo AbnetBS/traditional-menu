@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { RESTAURANT } from "@/lib/restaurant";
+import { getConfiguredSiteUrl, getSiteUrl } from "@/lib/site-url";
 
 const { identity, contact } = RESTAURANT;
+// Client-approved domain only — set in Coolify before production. Until then
+// metadata falls back to the deployment host / localhost (never a guessed URL).
+const configuredSiteUrl = getConfiguredSiteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://totottraditionalrestaurant.com"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: `${identity.name} | ${identity.nameAm} — Addis Ababa`,
     template: `%s — ${identity.name}`,
@@ -28,8 +32,9 @@ export const metadata: Metadata = {
   creator: "AB Web",
   publisher: "AB Web",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    // Client-approved Totot logo (public/totot-logo.png).
+    icon: identity.defaultLogo,
+    apple: identity.defaultLogo,
   },
   openGraph: {
     type: "website",
@@ -59,7 +64,10 @@ const restaurantJsonLd = {
   servesCuisine: ["Ethiopian", "Gurage", "Southern Ethiopian", "Traditional"],
   priceRange: "ETB 5,000+",
   telephone: contact.phone,
-  url: "https://totottraditionalrestaurant.com",
+  // No `url` until the client approves a domain: NEXT_PUBLIC_SITE_URL is set
+  // in Coolify before production, and only then is a canonical URL emitted
+  // (never localhost, never a guessed domain).
+  ...(configuredSiteUrl ? { url: configuredSiteUrl } : {}),
   acceptsReservations: "True",
   address: {
     "@type": "PostalAddress",
@@ -73,7 +81,9 @@ const restaurantJsonLd = {
     latitude: contact.lat,
     longitude: contact.lng,
   },
-  hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(identity.name)}`,
+  hasMap: contact.social.mapsUrl,
+  /** Official social profiles — client-approved URLs only. */
+  sameAs: [contact.social.facebook, contact.social.instagram, contact.social.tiktok],
   openingHoursSpecification: [
     {
       "@type": "OpeningHoursSpecification",

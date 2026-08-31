@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Ticket, TicketItem, CafeTable, StaffUser } from "@/types";
 import { triggerDesktopNotification } from "@/lib/notifications";
+import { RESTAURANT } from "@/lib/restaurant";
 import { unlockAudio, playDing } from "@/lib/sound";
 import { splitEven } from "@/lib/split-billing";
 import { compressImage } from "@/lib/image-utils";
@@ -50,8 +51,8 @@ export default function CashierDashboard() {
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    setAlertsOn(localStorage.getItem("fana_alerts") === "1");
-    const saved = sessionStorage.getItem("fana_cashier");
+    setAlertsOn(localStorage.getItem("totot_alerts") === "1");
+    const saved = sessionStorage.getItem("totot_cashier");
     if (saved) setStaffName(JSON.parse(saved).name);
     fetch("/api/staff?public=1")
       .then((r) => r.json())
@@ -65,10 +66,10 @@ export default function CashierDashboard() {
     if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
     }
-    localStorage.setItem("fana_alerts", "1");
+    localStorage.setItem("totot_alerts", "1");
     setAlertsOn(true);
     playDing();
-    triggerDesktopNotification({ title: "Fana Cafe • Cashier", message: "🔔 Ring bell + desktop alerts are now ON for this device!" });
+    triggerDesktopNotification({ title: `${RESTAURANT.identity.name} • Cashier`, message: "🔔 Ring bell + desktop alerts are now ON for this device!" });
   };
 
   const eventMessage = (t: Ticket): string | null => {
@@ -113,7 +114,7 @@ export default function CashierDashboard() {
         playDing();
         const first = newEvents[0];
         triggerDesktopNotification({
-          title: "Fana Cafe • Cashier Alert",
+          title: `${RESTAURANT.identity.name} • Cashier Alert`,
           message: eventMessage(first) || `${first.tableName} updated`,
         });
       }
@@ -174,14 +175,14 @@ export default function CashierDashboard() {
     const d = await r.json();
     if (r.ok && d.success) {
       setStaffName(d.staff.name);
-      sessionStorage.setItem("fana_cashier", JSON.stringify(d.staff));
+      sessionStorage.setItem("totot_cashier", JSON.stringify(d.staff));
     } else {
       setLoginError("Wrong name or PIN. Ask admin for your PIN.");
     }
   };
 
   const logout = () => {
-    sessionStorage.removeItem("fana_cashier");
+    sessionStorage.removeItem("totot_cashier");
     fetch("/api/staff/login", { method: "DELETE" }).catch(() => {});
     setStaffName("");
     setPin("");
@@ -388,7 +389,7 @@ export default function CashierDashboard() {
             <Coffee className="w-5 h-5 text-[#2C1B17]" />
           </div>
           <div>
-            <h1 className="font-serif font-bold text-amber-100 leading-none">Fana Cafe — Cashier</h1>
+            <h1 className="font-serif font-bold text-amber-100 leading-none">{RESTAURANT.identity.name} — Cashier</h1>
             <p className="text-[10px] text-stone-400">{staffName} • coordinating waiters & kitchen</p>
           </div>
         </div>

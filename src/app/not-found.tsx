@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { RESTAURANT } from "@/lib/restaurant";
 
 /**
- * Custom 404 page — Fana Cafe branding (coffee brown + gold), mobile-friendly.
- * No internal/system details are exposed; just a friendly "page not found"
- * with clear routes back to the homepage and the customer menu.
+ * Custom 404 page — branded with the configured restaurant (coffee brown +
+ * gold), mobile-friendly. No internal/system details are exposed; just a
+ * friendly "page not found" with clear routes back to the homepage and the
+ * customer menu.
  */
 export default function NotFound() {
   return (
@@ -11,11 +13,13 @@ export default function NotFound() {
       <div className="w-full max-w-md text-center">
         {/* Brand mark */}
         <div className="mx-auto w-16 h-16 rounded-full bg-[#2C1B17] border-2 border-[#C9A227] flex items-center justify-center shadow-lg mb-6">
-          <span className="text-2xl font-black text-[#C9A227] font-serif">F</span>
+          <span className="text-2xl font-black text-[#C9A227] font-serif">
+            {RESTAURANT.identity.shortName.charAt(0)}
+          </span>
         </div>
 
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#C9A227] mb-2">
-          Fana Cafe &amp; Restaurant
+          {RESTAURANT.identity.name}
         </p>
 
         <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#2C1B17]">404</h1>

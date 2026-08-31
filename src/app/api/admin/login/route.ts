@@ -65,8 +65,9 @@ export async function POST(request: Request) {
           { status: 503 }
         );
       }
-      // Development only: a documented local bootstrap password.
-      storedPassword = "fana2026";
+      // Development only: a documented local bootstrap password (never used
+      // in production — production fails closed above).
+      storedPassword = "admin2026";
     }
 
     const input = typeof password === "string" ? password : "";

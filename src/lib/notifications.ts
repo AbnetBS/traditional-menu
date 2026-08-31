@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { RESTAURANT } from "@/lib/restaurant";
 
 interface NotificationProps {
   message: string;
@@ -8,7 +9,7 @@ interface NotificationProps {
   icon?: string;
 }
 
-export function triggerDesktopNotification({ message, title = "Fana Cafe Alert", icon = "/favicon.ico" }: NotificationProps) {
+export function triggerDesktopNotification({ message, title = `${RESTAURANT.identity.name} Alert`, icon = "/favicon.ico" }: NotificationProps) {
   if (typeof window === "undefined" || !("Notification" in window)) return;
 
   // Request permission if not already granted
@@ -23,7 +24,7 @@ export function triggerDesktopNotification({ message, title = "Fana Cafe Alert",
         body: message,
         icon,
         badge: "/favicon.ico",
-        tag: "fana-cafe-notification",
+        tag: "restaurant-notification",
         requireInteraction: true,
         silent: false,
       });

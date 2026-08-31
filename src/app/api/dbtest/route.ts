@@ -16,7 +16,7 @@ export async function GET() {
   const inserts = await insertSmokeTest();
 
   return NextResponse.json({
-    diagnostic: "Fana Cafe Database Live Test",
+    diagnostic: "Restaurant Database Live Test",
     schema_repair_ok: migrate.success,
     repair_errors: migrate.errors ?? [],
     tables,

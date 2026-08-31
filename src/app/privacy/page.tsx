@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { RESTAURANT } from "@/lib/restaurant";
+
+const { identity, contact } = RESTAURANT;
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Fana Cafe & Restaurant",
-  description:
-    "How Fana Cafe & Restaurant collects, uses, and protects your information when you browse the menu, submit a review, or place a table/QR order.",
+  title: "Privacy Policy",
+  description: `How ${identity.name} collects, uses, and protects your information when you browse the menu, submit a review, or place a table/QR order.`,
 };
 
 export default function PrivacyPage() {
@@ -14,25 +16,25 @@ export default function PrivacyPage() {
         {/* Brand header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-11 h-11 rounded-full bg-[#2C1B17] border-2 border-[#C9A227] flex items-center justify-center shrink-0">
-            <span className="text-xl font-black text-[#C9A227] font-serif">F</span>
+            <span className="text-xl font-black text-[#C9A227] font-serif">{identity.shortName.charAt(0)}</span>
           </div>
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-black text-[#2C1B17]">Privacy Policy</h1>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C9A227]">
-              Fana Cafe &amp; Restaurant
+              {identity.name}
             </p>
           </div>
         </div>
 
         <p className="text-sm text-[#6D4C41] leading-relaxed mb-8">
-          This page explains, in plain language, what information Fana Cafe &amp; Restaurant
+          This page explains, in plain language, what information {identity.name}
           may collect through this website, why we collect it, how we protect it, and how you
           can contact us about privacy questions. This is a general information page and is not
           legal advice.
         </p>
 
         <Section title="1. Who we are">
-          Fana Cafe &amp; Restaurant is a café and restaurant located in Addis Ababa, Ethiopia.
+          {identity.name} is a restaurant located in Addis Ababa, Ethiopia.
           This website lets customers view our menu, read and submit reviews, and place orders
           by scanning the QR code at their table.
         </Section>
@@ -47,7 +49,7 @@ export default function PrivacyPage() {
             <li>
               <strong className="text-[#4E342E]">Table and order information.</strong> When you
               order from a table (by scanning the QR code), we record the table you are at, the
-              items you order (including quantities and any notes such as “no sugar”), the order
+              items you order (including quantities and any notes such as {"“no sugar”"}), the order
               total, and how you chose to pay (for example, cash, Telebirr, CBE, or card).
             </li>
             <li>
@@ -111,8 +113,8 @@ export default function PrivacyPage() {
         <Section title="9. Contact us about privacy">
           If you have any questions or concerns about your privacy, you can reach us at:
           <ul className="list-none space-y-1 mt-2 text-[#4E342E]">
-            <li>📞 0911 065 022</li>
-            <li>📍 Town Square Building, 22 Square, Djibouti Street, Bole, Addis Ababa, Ethiopia</li>
+            <li>📞 {contact.phoneDisplay}</li>
+            <li>📍 {contact.address}</li>
           </ul>
         </Section>
 
