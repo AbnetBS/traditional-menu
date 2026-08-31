@@ -410,9 +410,11 @@ const CATEGORY_AM: Record<string, string> = {
  */
 
 const TX_STORAGE_KEY = "tm_tx_am";
-const TX_FLUSH_DELAY_MS = 600;
+const TX_FLUSH_DELAY_MS = 600; // debounce before the first attempt
+const TX_RETRY_DELAY_MS = 12_000; // quiet retry when a batch failed
 const TX_BATCH_MAX = 120;
 const TX_STORAGE_MAX_ENTRIES = 1500;
+const TX_MAX_ATTEMPTS = 3; // per string, per tab — never hammer Google forever
 
 const GE_EZ_RE = /[\u1200-\u137F]/; // Amharic script already
 
@@ -424,10 +426,12 @@ function txTranslatable(text: string): boolean {
 
 let txCache: Record<string, string> | null = null; // lazy from localStorage
 const txRequested = new Set<string>(); // this tab already asked / received
+const txAttempts = new Map<string, number>(); // failed attempts per string
 const txQueue = new Set<string>();
 const txListeners = new Set<() => void>();
 let txVersion = 0;
 let txTimer: ReturnType<typeof setTimeout> | null = null;
+let txRetryTimer: ReturnType<typeof setTimeout> | null = null;
 let txInFlight = false;
 
 function txLoad(): Record<string, string> {
@@ -466,6 +470,25 @@ function txGetVersion(): number {
   return txVersion;
 }
 
+/** A string failed to translate this time — retry it quietly (bounded). */
+function txRetryLater(texts: string[]): void {
+  for (const s of texts) {
+    txRequested.delete(s); // allow a future registration to re-ask
+    const n = (txAttempts.get(s) ?? 0) + 1;
+    if (n <= TX_MAX_ATTEMPTS) {
+      txAttempts.set(s, n);
+      txQueue.add(s);
+    }
+  }
+  if (txQueue.size > 0) {
+    if (txRetryTimer) return;
+    txRetryTimer = setTimeout(() => {
+      txRetryTimer = null;
+      void txFlush();
+    }, TX_RETRY_DELAY_MS);
+  }
+}
+
 async function txFlush(): Promise<void> {
   if (txInFlight || txQueue.size === 0) return;
   txInFlight = true;
@@ -477,29 +500,38 @@ async function txFlush(): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lang: "am", texts: batch }),
     });
-    if (r.ok) {
-      const data = await r.json();
-      const map = data?.translations;
-      let changed = false;
-      if (map && typeof map === "object") {
-        const cache = txLoad();
-        for (const [k, v] of Object.entries(map as Record<string, string>)) {
-          if (typeof v === "string" && v) {
-            if (cache[k] !== v) changed = true;
-            cache[k] = v;
+    const data = r.ok ? await r.json().catch(() => null) : null;
+    const map = data?.translations;
+    const cache = txLoad();
+    let changed = false;
+    const failed: string[] = [];
+    if (map && typeof map === "object") {
+      // Only strings we actually RECEIVED are done — every other one is
+      // retried, so a Google hiccup can never leave the menu half-English.
+      for (const s of batch) {
+        const v = map[s];
+        if (typeof v === "string" && v) {
+          txRequested.add(s);
+          txAttempts.delete(s);
+          if (cache[s] !== v) {
+            changed = true;
+            cache[s] = v;
           }
-        }
-        // every requested string is marked done — even ones Google couldn't
-        // translate — so we never re-ask for the same text in this tab.
-        for (const s of batch) txRequested.add(s);
-        if (changed) {
-          txPersist();
-          txEmit();
+        } else {
+          failed.push(s);
         }
       }
+    } else {
+      failed.push(...batch); // request failed (offline / 429 / server error)
     }
+    if (changed) {
+      txPersist();
+      txEmit();
+    }
+    if (failed.length) txRetryLater(failed);
   } catch {
-    // offline / server down → keep showing English; retry next registration
+    // offline / server down → keep showing English; retry quietly later
+    txRetryLater(batch);
   } finally {
     txInFlight = false;
     if (txQueue.size > 0) txSchedule(); // leftovers (batch > TX_BATCH_MAX)

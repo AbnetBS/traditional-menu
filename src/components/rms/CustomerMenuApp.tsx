@@ -698,16 +698,18 @@ export default function CustomerMenuApp() {
             <p className="tm-head text-sm font-bold">{t("loading_menu")}</p>
             <p className="text-[11px] text-[#6d563f]">{t("loading_sub")}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="tm-panel animate-pulse overflow-hidden">
-                <div className="m-1 h-28 rounded-md bg-[#d8c9a8]" />
-                <div className="space-y-2 p-3">
-                  <div className="h-3 w-4/5 rounded bg-[#d8c9a8]" />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="tm-panel animate-pulse flex gap-3 p-3">
+                <div className="w-32 shrink-0">
+                  <div className="m-1 h-28 rounded-md bg-[#d8c9a8]" />
+                </div>
+                <div className="flex-1 space-y-2 pt-2">
+                  <div className="h-3.5 w-4/5 rounded bg-[#d8c9a8]" />
                   <div className="h-2.5 w-2/3 rounded bg-[#d8c9a8]" />
-                  <div className="flex justify-between pt-1">
+                  <div className="flex justify-between pt-3">
                     <div className="h-4 w-14 rounded bg-[#d8c9a8]" />
-                    <div className="h-6 w-16 rounded bg-[#d8c9a8]" />
+                    <div className="h-8 w-20 rounded bg-[#d8c9a8]" />
                   </div>
                 </div>
               </div>
@@ -716,25 +718,27 @@ export default function CustomerMenuApp() {
         </div>
       )}
 
-      {/* menu grid — parchment cards in a carved-wood wall */}
-      <div className="mx-auto grid max-w-lg grid-cols-2 gap-3 px-4">
+      {/* menu list — one item per row: big photo, name, price, quick add */}
+      <div className="mx-auto max-w-lg space-y-3 px-4">
         {filteredMenu.map((m) => {
           const qty = cartQty(m.id);
           const out = !m.isAvailable;
+          const price = effectivePrice(m);
           return (
-            <div key={m.id} className={`tm-panel relative ${out ? "opacity-60" : ""}`}>
+            <div key={m.id} className={`tm-panel relative flex gap-3 p-3 ${out ? "opacity-60" : ""}`}>
               <FrameCorners />
-              {/* Tap photo or name → BIG detail view with full description */}
+              {/* photo — big, framed; tap for full details */}
               <button
                 onClick={() => setDetailItem(m)}
-                className="relative w-full cursor-pointer text-left"
+                className="relative w-32 shrink-0 cursor-pointer sm:w-40"
                 title={t("details")}
+                aria-label={`${t("details")} — ${menuText(m.name)}`}
               >
-                <span className={`tm-photo block m-[5px] mb-0 ${out ? "grayscale-[40%]" : ""}`}>
-                  <img src={optimizeImageUrl(m.imageUrl, 400, 250)} alt={menuText(m.name)} loading="lazy" decoding="async" className="h-28 object-cover bg-[#e8dcc0]" onError={(e) => { const el = e.currentTarget; if (!el.src.includes("placeholder")) el.src = FALLBACK_FOOD_IMAGE; }} />
+                <span className={`tm-photo block m-[3px] ${out ? "grayscale-[40%]" : ""}`}>
+                  <img src={optimizeImageUrl(m.imageUrl, 480, 360)} alt={menuText(m.name)} loading="lazy" decoding="async" className="h-28 w-full object-cover bg-[#e8dcc0] sm:h-32" onError={(e) => { const el = e.currentTarget; if (!el.src.includes("placeholder")) el.src = FALLBACK_FOOD_IMAGE; }} />
                 </span>
-                <span className="absolute bottom-2 right-2 rounded-full border border-[#b8955a]/70 bg-[#241710]/85 px-2 py-0.5 text-[9px] font-bold text-[#d8b97e] backdrop-blur-sm">
-                  🔍 {t("details")}
+                <span className="absolute top-1.5 right-1.5 rounded-full border border-[#b8955a]/70 bg-[#241710]/85 px-1.5 py-0.5 text-[9px] font-bold text-[#d8b97e] backdrop-blur-sm">
+                  🔍
                 </span>
                 {out && (
                   <span className="absolute left-2 top-2 rounded-full bg-[#8f3b2c] px-2 py-0.5 text-[9px] font-extrabold uppercase text-[#fdf3e0]">
@@ -742,25 +746,26 @@ export default function CustomerMenuApp() {
                   </span>
                 )}
               </button>
-              <div className="space-y-1.5 p-3">
-                <button onClick={() => setDetailItem(m)} className="w-full text-left">
-                  <p className="tm-dish-name line-clamp-2 min-h-[2.1rem] text-[13px] leading-tight transition-colors hover:text-[#9a4e32]">
-                    {menuText(m.name)}
-                  </p>
-                </button>
-                <p className="text-[10px] leading-snug text-[#6d563f] line-clamp-2">{menuText(m.description)}</p>
-                <div className="flex items-center justify-between gap-1 pt-1">
-                  {(() => {
-                    const ep = effectivePrice(m);
-                    return ep.onSale ? (
-                      <span className="flex flex-col leading-none">
-                        <span className="text-[10px] font-semibold text-[#a08567] line-through">{m.price} ETB</span>
-                        <span className="text-sm font-extrabold text-[#45653f]">{ep.price} ETB <span className="rounded bg-[#45653f] px-1.5 py-0.5 text-[9px] font-extrabold text-[#fdf3e0]">{t("sale")}</span></span>
-                      </span>
-                    ) : (
-                      <span className="text-sm font-extrabold text-[#9a4e32]">{m.price} ETB</span>
-                    );
-                  })()}
+
+              {/* name, description, price + action */}
+              <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                <div>
+                  <button onClick={() => setDetailItem(m)} className="w-full text-left">
+                    <p className="tm-dish-name line-clamp-2 text-[15px] leading-snug transition-colors hover:text-[#9a4e32] sm:text-base">
+                      {menuText(m.name)}
+                    </p>
+                  </button>
+                  <p className="mt-1 text-[11px] leading-snug text-[#6d563f] line-clamp-2">{menuText(m.description)}</p>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  {price.onSale ? (
+                    <span className="flex flex-col leading-none">
+                      <span className="text-[10px] font-semibold text-[#a08567] line-through">{m.price} ETB</span>
+                      <span className="text-[15px] font-extrabold text-[#45653f]">{price.price} ETB <span className="rounded bg-[#45653f] px-1.5 py-0.5 text-[9px] font-extrabold text-[#fdf3e0]">{t("sale")}</span></span>
+                    </span>
+                  ) : (
+                    <span className="text-[15px] font-extrabold text-[#9a4e32]">{m.price} ETB</span>
+                  )}
                   {out ? (
                     <span className="text-[10px] font-bold text-[#a08567]">—</span>
                   ) : qty > 0 ? (
@@ -768,26 +773,26 @@ export default function CustomerMenuApp() {
                     <div className="flex items-center gap-1 rounded-lg border border-[#b8955a]/40 bg-[#2b1b13] p-1">
                       <button
                         onClick={() => setQty(m, qty - 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-md bg-[#241710] text-[#e8d8b5] hover:bg-[#8f3b2c]"
+                        className="flex h-8 w-8 items-center justify-center rounded-md bg-[#241710] text-[#e8d8b5] hover:bg-[#8f3b2c]"
                         aria-label="Decrease"
                       >
-                        <Minus className="w-3.5 h-3.5" />
+                        <Minus className="w-4 h-4" />
                       </button>
                       <span className="w-5 text-center text-sm font-extrabold text-[#f2e4c6]">{qty}</span>
                       <button
                         onClick={() => setQty(m, qty + 1)}
-                        className="tm-btn flex h-7 w-7 items-center justify-center"
+                        className="tm-btn flex h-8 w-8 items-center justify-center"
                         aria-label="Increase"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setQty(m, 1)}
-                      className="tm-btn flex items-center gap-1 px-3 py-1.5 text-[11px] font-extrabold"
+                      className="tm-btn flex items-center gap-1 px-3.5 py-2 text-xs font-extrabold"
                     >
-                      <Plus className="w-3 h-3" /> {t("add")}
+                      <Plus className="w-3.5 h-3.5" /> {t("add")}
                     </button>
                   )}
                 </div>
@@ -796,7 +801,7 @@ export default function CustomerMenuApp() {
           );
         })}
         {!menuLoading && filteredMenu.length === 0 && (
-          <div className="col-span-2 py-12 text-center text-sm text-[#a98c5f]">
+          <div className="py-12 text-center text-sm text-[#a98c5f]">
             <Utensils className="mx-auto mb-2 h-8 w-8 text-[#6d563f]" />
             {t("nothing_found")}
           </div>
@@ -1009,7 +1014,7 @@ export default function CustomerMenuApp() {
             <p>📍 {menuText(address)}</p>
             <p>📞 <a href={`tel:${phoneHref}`} className="font-extrabold text-[#9a4e32]">{phone}</a></p>
             <p>🕒 {menuText(hours)}</p>
-            <p className="text-[#8a7257]">Plus Code: {plusCode}</p>
+            <p className="text-[#8a7257]">{lang === "am" ? `ፕላስ ኮድ፡ ${plusCode}` : `Plus Code: ${plusCode}`}</p>
           </div>
           <a
             href={RESTAURANT.contact.social.mapsUrl}
