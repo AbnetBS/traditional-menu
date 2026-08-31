@@ -10,6 +10,7 @@ import { compressImage, optimizeImageUrl, FALLBACK_FOOD_IMAGE } from "@/lib/imag
 import { effectivePrice } from "@/lib/price";
 import { unlockAudio, playDing } from "@/lib/sound";
 import { triggerDesktopNotification } from "@/lib/notifications";
+import { RESTAURANT } from "@/lib/restaurant";
 import { useRef } from "react";
 
 interface StaffLite {
@@ -125,8 +126,8 @@ export default function WaiterApp() {
   const alertsInitRef = useRef(false);
 
   useEffect(() => {
-    setAlertsOn(localStorage.getItem("fana_alerts_waiter") === "1");
-    const saved = sessionStorage.getItem("fana_waiter");
+    setAlertsOn(localStorage.getItem("totot_alerts_waiter") === "1");
+    const saved = sessionStorage.getItem("totot_waiter");
     if (saved) {
       const s = JSON.parse(saved);
       setStaffName(s.name);
@@ -180,7 +181,7 @@ export default function WaiterApp() {
     if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
     }
-    localStorage.setItem("fana_alerts_waiter", "1");
+    localStorage.setItem("totot_alerts_waiter", "1");
     setAlertsOn(true);
     playDing();
     showToast("🔔 Ring bell alerts ON");
@@ -204,7 +205,7 @@ export default function WaiterApp() {
         playDing(3);
         const t0 = fresh[0];
         triggerDesktopNotification({
-          title: "Fana Cafe • Waiter Alert",
+          title: `${RESTAURANT.identity.name} • Waiter Alert`,
           message: `🍽 New order request — ${t0.tableName} • ${t0.totalAmount} ETB • go confirm!`,
         });
         showToast(`🔔 New order request: ${t0.tableName}`);
@@ -215,7 +216,10 @@ export default function WaiterApp() {
 
   const loadAll = async () => {
     loadTables();
-    const m = await fetch("/api/menu");
+    // Customer-facing price view: live Daily Board promos are overlaid so the
+    // waiter offers exactly the price the guest saw (the ticket server
+    // re-prices authoritatively anyway).
+    const m = await fetch("/api/menu?promo=1");
     if (m.ok) setMenu(await m.json());
     const cr = await fetch("/api/categories");
     if (cr.ok) {
@@ -234,7 +238,7 @@ export default function WaiterApp() {
     const d = await r.json();
     if (r.ok && d.success) {
       setStaffName(d.staff.name);
-      sessionStorage.setItem("fana_waiter", JSON.stringify(d.staff));
+      sessionStorage.setItem("totot_waiter", JSON.stringify(d.staff));
       setView("tables");
     } else {
       setLoginError("Wrong name or PIN. Ask admin for your PIN.");
@@ -242,7 +246,7 @@ export default function WaiterApp() {
   };
 
   const logout = () => {
-    sessionStorage.removeItem("fana_waiter");
+    sessionStorage.removeItem("totot_waiter");
     fetch("/api/staff/login", { method: "DELETE" }).catch(() => {});
     setStaffName("");
     setView("login");
@@ -491,7 +495,7 @@ export default function WaiterApp() {
           </div>
           <div>
             <p className="text-xs font-bold text-amber-100 leading-none">{staffName}</p>
-            <p className="text-[10px] text-stone-400">Waiter • Fana Cafe</p>
+            <p className="text-[10px] text-stone-400">Waiter • {RESTAURANT.identity.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { RESTAURANT } from "@/lib/restaurant";
+
+const { identity, contact } = RESTAURANT;
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Fana Cafe & Restaurant",
-  description:
-    "The terms for using the Fana Cafe & Restaurant website, including ordering from your table, menu availability, and user-submitted reviews.",
+  title: "Terms of Service",
+  description: `The terms for using the ${identity.name} website, including ordering from your table, menu availability, and user-submitted reviews.`,
 };
 
 export default function TermsPage() {
@@ -14,18 +16,18 @@ export default function TermsPage() {
         {/* Brand header */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-11 h-11 rounded-full bg-[#2C1B17] border-2 border-[#C9A227] flex items-center justify-center shrink-0">
-            <span className="text-xl font-black text-[#C9A227] font-serif">F</span>
+            <span className="text-xl font-black text-[#C9A227] font-serif">{identity.shortName.charAt(0)}</span>
           </div>
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-black text-[#2C1B17]">Terms of Service</h1>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#C9A227]">
-              Fana Cafe &amp; Restaurant
+              {identity.name}
             </p>
           </div>
         </div>
 
         <p className="text-sm text-[#6D4C41] leading-relaxed mb-8">
-          These terms describe how you may use the Fana Cafe &amp; Restaurant website, including
+          These terms describe how you may use the {identity.name} website, including
           our menu and table ordering. By using this website you agree to these terms. This is a
           general information page and is not legal advice.
         </p>
@@ -62,13 +64,13 @@ export default function TermsPage() {
         </Section>
 
         <Section title="6. Limitation of responsibility">
-          To the extent permitted by law, Fana Cafe &amp; Restaurant is not liable for any loss or
+          To the extent permitted by law, {identity.name} is not liable for any loss or
           damage arising from your use of this website, including any temporary technical problems.
           Nothing here affects rights you may have under applicable law.
         </Section>
 
         <Section title="7. Content and intellectual property">
-          The design, text, and images on this website belong to Fana Cafe &amp; Restaurant (or are
+          The design, text, and images on this website belong to {identity.name} (or are
           used with permission). You may view and use them for personal, non-commercial purposes
           only, and may not copy or reuse them without permission.
         </Section>
@@ -81,8 +83,8 @@ export default function TermsPage() {
         <Section title="9. Contact us">
           If you have questions about these terms, you can reach us at:
           <ul className="list-none space-y-1 mt-2 text-[#4E342E]">
-            <li>📞 0911 065 022</li>
-            <li>📍 Town Square Building, 22 Square, Djibouti Street, Bole, Addis Ababa, Ethiopia</li>
+            <li>📞 {contact.phoneDisplay}</li>
+            <li>📍 {contact.address}</li>
           </ul>
         </Section>
 

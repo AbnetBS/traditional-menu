@@ -42,22 +42,21 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("reports");
 
+  // Fallbacks always come from the configured restaurant (src/lib/restaurant.ts) —
+  // never from another business's data.
   const [settingsForm, setSettingsForm] = useState({
-    cafe_name: settings.cafe_name || "Fana Cafe & Restaurant",
-    tagline: settings.tagline || "Where Great Coffee Meets Beautiful Moments in Addis Ababa",
-    hero_title: settings.hero_title || "Where Great Coffee Meets Beautiful Moments",
-    hero_subtitle:
-      settings.hero_subtitle || "A cozy café and restaurant located at Town Square Building, 22 Square (Djibouti Street, Bole, Addis Ababa)...",
-    hero_bg_image:
-      settings.hero_bg_image ||
-      "https://images.pexels.com/photos/16563658/pexels-photo-16563658.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=800&w=1200",
+    cafe_name: settings.cafe_name || RESTAURANT.identity.name,
+    tagline: settings.tagline || RESTAURANT.identity.tagline,
+    hero_title: settings.hero_title || RESTAURANT.identity.tagline,
+    hero_subtitle: settings.hero_subtitle || RESTAURANT.identity.story,
+    hero_bg_image: settings.hero_bg_image || "/images/hero-hall.jpg",
     logo_url: String(settings.logo_url || ""),
     receipt_enabled: String(settings.receipt_enabled ?? "true"),
-    phone: settings.phone || "0911 065 022",
-    address: settings.address || "Town Square Building, 22 Square, Djibouti Street, Bole, Addis Ababa, Ethiopia",
-    plus_code: settings.plus_code || "2Q7Q+W2 Addis Ababa",
-    opening_hours: settings.opening_hours || "Open Daily Until 8:30 PM (Hours may vary during holidays)",
-    announcement: settings.announcement || "☕ Welcome to Fana Cafe & Restaurant (22 Square, Town Square Building)!",
+    phone: settings.phone || RESTAURANT.contact.phoneDisplay,
+    address: settings.address || RESTAURANT.contact.address,
+    plus_code: settings.plus_code || RESTAURANT.contact.plusCode,
+    opening_hours: settings.opening_hours || RESTAURANT.contact.hoursNote,
+    announcement: settings.announcement || "",
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState("");
@@ -340,11 +339,11 @@ export default function AdminPanel({
                 <Camera className="w-4 h-4 text-[#C9A227]" /> Restaurant Logo (navbar, QR menu & staff apps)
               </h3>
               <p className="text-[11px] text-stone-400">
-                Tip: the logo shows inside a <strong>small circle</strong> — a square or round icon (not wide text banners) looks best, like the official Fana Cafe badge.
+                Tip: the logo shows inside a <strong>small circle</strong> — a square or round icon (not wide text banners) looks best.
               </p>
               <div className="flex items-center gap-4">
                 <img
-                  src={settingsForm.logo_url || "/logo.png"}
+                  src={settingsForm.logo_url || RESTAURANT.identity.defaultLogo}
                   alt="Logo preview"
                   className="w-16 h-16 rounded-full object-contain bg-white border-2 border-[#C9A227] p-1"
                 />
@@ -370,7 +369,7 @@ export default function AdminPanel({
                     type="text"
                     value={settingsForm.logo_url}
                     onChange={(e) => setSettingsForm({ ...settingsForm, logo_url: e.target.value })}
-                    placeholder="...or paste logo URL (empty = default Fana logo)"
+                    placeholder="...or paste logo URL (empty = bundled default logo)"
                     className="w-full bg-[#2C1B17] border border-stone-700 rounded-xl p-2.5 text-xs text-stone-200"
                   />
                 </div>
@@ -840,7 +839,7 @@ export default function AdminPanel({
             <form onSubmit={handleSaveMenuItem} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-amber-200 mb-1">Name *</label>
-                <input type="text" required value={editingItem.name || ""} onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })} placeholder="e.g. Famous Fana Macchiato" className="w-full bg-[#3D2314] border border-stone-700 rounded-xl p-2.5 text-xs text-white" />
+                <input type="text" required value={editingItem.name || ""} onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })} placeholder="e.g. Special Kitfo" className="w-full bg-[#3D2314] border border-stone-700 rounded-xl p-2.5 text-xs text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

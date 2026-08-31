@@ -6,12 +6,22 @@ import { eq, asc } from "drizzle-orm";
 import { PUBLIC_CACHE_CONTROL } from "@/lib/cache";
 import { deleteOrphanedCdnImages, persistImageRef } from "@/lib/image-store";
 import { requireAdmin } from "@/lib/session";
+import { getLiveMenuPromos } from "@/lib/daily-board";
+import { applyPromosToItems } from "@/lib/promotions";
 
-export async function GET() {
+export async function GET(request: Request) {
   await ensureTablesExist();
   try {
+    const { searchParams } = new URL(request.url);
+    // ?promo=1 is the CUSTOMER-facing menu: live Daily Board promotions are
+    // overlaid onto the item sale fields (the existing effectivePrice helper
+    // then applies them everywhere). Admin/staff reads omit the flag and see
+    // the exact rows they own — saving from the editor can never bake a promo
+    // into a menu row.
+    const withPromo = searchParams.get("promo") === "1";
     const items = await db.select().from(menuItems).orderBy(asc(menuItems.sortOrder), asc(menuItems.id));
-    return NextResponse.json(items, { status: 200, headers: { "Cache-Control": PUBLIC_CACHE_CONTROL } });
+    const out = withPromo ? applyPromosToItems(items, await getLiveMenuPromos()) : items;
+    return NextResponse.json(out, { status: 200, headers: { "Cache-Control": PUBLIC_CACHE_CONTROL } });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

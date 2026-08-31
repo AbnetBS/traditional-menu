@@ -43,7 +43,7 @@ function TicketCard({ t }: { t: TicketHealth }) {
         <div className="flex items-center gap-2.5">
           <span className={`h-2.5 w-2.5 rounded-full ${meta.dot}`} />
           <span className="font-serif font-bold text-amber-100">{t.tableName}</span>
-          {t.orderNumber && <span className="text-xs text-stone-400">#{String(t.orderNumber).replace("FANA-", "")}</span>}
+          {t.orderNumber && <span className="text-xs text-stone-400">#{String(t.orderNumber).replace(/^[A-Z]+-/, "")}</span>}
         </div>
         <span className={`flex items-center gap-1 text-xs font-bold ${meta.text}`}>
           <Clock className="h-3 w-3" /> {ageLabel(t.ageMin)}

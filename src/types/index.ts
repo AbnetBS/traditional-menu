@@ -26,6 +26,13 @@ export interface Announcement {
   endDate?: string | null;
   priority?: number;
   createdAt?: string;
+  /** Linked existing menu item (Daily Board promo target). */
+  menuItemId?: number | null;
+  /** Promo price (ETB) for the linked item while this announcement is live. */
+  salePrice?: number | null;
+  /** Server-enriched display fields (never stored). */
+  menuItemName?: string | null;
+  menuItemBasePrice?: number | null;
 }
 
 export interface Category {

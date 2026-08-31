@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Coffee, CookingPot, RefreshCw, LogOut, CheckCircle2, BellRing, Clock } from "lucide-react";
 import { unlockAudio, playDing } from "@/lib/sound";
 import { triggerDesktopNotification } from "@/lib/notifications";
+import { RESTAURANT } from "@/lib/restaurant";
 import Link from "next/link";
 
 type Station = "barista" | "kitchen";
@@ -54,8 +55,8 @@ export default function StationApp({ station }: { station: Station }) {
   const initRef = useRef(false);
 
   useEffect(() => {
-    setAlertsOn(localStorage.getItem(`fana_alerts_${station}`) === "1");
-    const saved = sessionStorage.getItem(`fana_${station}`);
+    setAlertsOn(localStorage.getItem(`totot_alerts_${station}`) === "1");
+    const saved = sessionStorage.getItem(`totot_${station}`);
     if (saved) {
       const s = JSON.parse(saved);
       setStaffName(s.name);
@@ -76,14 +77,14 @@ export default function StationApp({ station }: { station: Station }) {
     const d = await r.json();
     if (r.ok && d.success) {
       setStaffName(d.staff.name);
-      sessionStorage.setItem(`fana_${station}`, JSON.stringify(d.staff));
+      sessionStorage.setItem(`totot_${station}`, JSON.stringify(d.staff));
     } else {
       setLoginError(`Wrong name or PIN. Ask admin for your ${meta.label} PIN.`);
     }
   };
 
   const logout = () => {
-    sessionStorage.removeItem(`fana_${station}`);
+    sessionStorage.removeItem(`totot_${station}`);
     fetch("/api/staff/login", { method: "DELETE" }).catch(() => {});
     setStaffName("");
     setPin("");
@@ -108,7 +109,7 @@ export default function StationApp({ station }: { station: Station }) {
       for (const t of data) for (const i of t.items) {
         if (fresh.includes(i.id)) {
           triggerDesktopNotification({
-            title: `Fana Cafe • ${meta.label} Alert`,
+            title: `${RESTAURANT.identity.name} • ${meta.label} Alert`,
             message: `New item at ${t.tableName}: ${i.name} x${i.quantity}${i.notes ? ` • note: ${i.notes}` : ""}`,
           });
           break;
@@ -143,7 +144,7 @@ export default function StationApp({ station }: { station: Station }) {
   const enableAlerts = async () => {
     unlockAudio();
     if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission();
-    localStorage.setItem(`fana_alerts_${station}`, "1");
+    localStorage.setItem(`totot_alerts_${station}`, "1");
     setAlertsOn(true);
     playDing();
   };
@@ -217,7 +218,7 @@ export default function StationApp({ station }: { station: Station }) {
             <Icon className="w-5 h-5 text-[#2C1B17]" />
           </div>
           <div>
-            <h1 className="font-serif font-bold text-amber-100 leading-none">Fana Cafe — {meta.label}</h1>
+            <h1 className="font-serif font-bold text-amber-100 leading-none">{RESTAURANT.identity.name} — {meta.label}</h1>
             <p className="text-[10px] text-stone-400">{meta.desc} • {staffName}</p>
           </div>
         </div>

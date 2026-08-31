@@ -10,18 +10,18 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * cheap (no extra query) while making tokens unforgeable without the secret.
  *
  * Two independent sessions:
- *   - ADMIN (owner): set by /api/admin/login  → cookie "fana_admin_auth"
+ *   - ADMIN (owner): set by /api/admin/login  → cookie "totot_admin_auth"
  *   - STAFF (waiter/cashier/kitchen/barista): set by /api/staff/login
- *                                                → cookie "fana_staff_auth"
+ *                                                → cookie "totot_staff_auth"
  */
 
-export const ADMIN_COOKIE = "fana_admin_auth";
-export const STAFF_COOKIE = "fana_staff_auth";
+export const ADMIN_COOKIE = "totot_admin_auth";
+export const STAFF_COOKIE = "totot_staff_auth";
 
 export type AdminSession = { kind: "admin"; iat: number };
 export type StaffSession = { kind: "staff"; staffId: number; name: string; role: string; iat: number };
 
-const DEV_SECRET = "fana-dev-session-secret-do-not-use-in-production";
+const DEV_SECRET = "totot-dev-session-secret-do-not-use-in-production";
 
 /**
  * The signing secret. In production this MUST come from SESSION_SECRET — if it

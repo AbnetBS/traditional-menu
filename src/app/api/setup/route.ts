@@ -15,8 +15,8 @@ export async function GET() {
   const migrateResult = await ensureTablesExist();
   const seedResult = await ensureDbSeeded();
 
-  // One-time data normalizer: undo the historical "FanaQueen" naming in saved settings.
-  // The business is called "Fana Cafe & Restaurant" — any stored mention gets corrected.
+  // One-time data normalizer: repair any stored legacy venue name to the
+  // configured business (src/lib/restaurant.ts) when served.
   let normalized = 0;
   try {
     const { siteSettings } = await import("@/db/schema");
@@ -50,7 +50,7 @@ export async function GET() {
         : "Some steps need attention. See details below.",
       migration_errors: migrateResult.errors ?? [],
       seed_result: seedResult,
-      settings_normalized_fanaqueen_to_fana_cafe: normalized,
+      settings_normalized_legacy_brand: normalized,
       tables: tableReport,
       insert_smoke_test: insertTest,
       next_step: allOk

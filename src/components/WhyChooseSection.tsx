@@ -10,7 +10,7 @@ export default function WhyChooseSection() {
     {
       icon: Coffee,
       title: "Premium Coffee",
-      desc: "Freshly prepared Ethiopian coffee including our popular Fana Macchiato, brewed with rich local Arabica beans.",
+      desc: "Freshly prepared Ethiopian coffee including jebena buna, brewed with rich local Arabica beans.",
       badge: "Local Roasts",
     },
     {
@@ -59,7 +59,7 @@ export default function WhyChooseSection() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#C9A227]/20 border border-[#C9A227]/40 text-[#C9A227] text-xs font-bold uppercase tracking-widest mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{tx("Why Choose Fana Cafe")}</span>
+            <span>{tx("Why Choose Totot")}</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-serif font-bold text-amber-100">
@@ -67,7 +67,7 @@ export default function WhyChooseSection() {
           </h2>
 
           <p className="text-stone-300 text-base sm:text-lg mt-4 font-light">
-            {tx("Whether you are stopping by for your morning macchiato or unwinding with fresh juice and desserts, Fana Cafe offers a welcoming setting for every guest.")}
+            {tx("Whether you are here for kitfo, a celebration or the jebena ceremony, Totot offers a welcoming setting for every guest.")}
           </p>
         </div>
 

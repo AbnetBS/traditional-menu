@@ -34,6 +34,9 @@ export const menuItems = pgTable("menu_items", {
 });
 
 // Daily Board — owner's rotating announcements (promotions, sold-out notes, holiday greetings)
+// Promos: an announcement can point at one EXISTING menu item (menu_item_id)
+// with a promo price (sale_price); while live, that price is applied through
+// the existing menu/cart/ticket flow (see src/lib/daily-board.ts).
 export const announcements = pgTable("announcements", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 200 }).notNull(),
@@ -42,6 +45,8 @@ export const announcements = pgTable("announcements", {
   startDate: varchar("start_date", { length: 20 }), // YYYY-MM-DD
   endDate: varchar("end_date", { length: 20 }),
   priority: integer("priority").default(0),
+  menuItemId: integer("menu_item_id"), // linked existing menu item (promo target)
+  salePrice: integer("sale_price"), // promo price in ETB for that item
   createdAt: timestamp("created_at").defaultNow(),
 });
 

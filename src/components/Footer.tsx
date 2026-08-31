@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SiteSettings } from "@/types";
 import { fixBrandText } from "@/lib/brand";
 import { useT, useAutoT } from "@/lib/i18n";
+import { RESTAURANT } from "@/lib/restaurant";
 
 interface FooterProps {
   settings: SiteSettings;
@@ -15,7 +16,7 @@ interface FooterProps {
 export default function Footer({ settings, onOpenAdmin, isAdminLoggedIn }: FooterProps) {
   const t = useT();
   const tx = useAutoT();
-  const cafeName = fixBrandText(settings.cafe_name || "Fana Cafe & Restaurant");
+  const cafeName = fixBrandText(settings.cafe_name || RESTAURANT.identity.name);
   const tagline = settings.tagline || "Where Great Coffee Meets Beautiful Moments";
   const phone = settings.phone || "0911 065 022";
   const address = settings.address || "Addis Ababa, Ethiopia";

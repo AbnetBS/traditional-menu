@@ -51,13 +51,13 @@ const run = (tickets, items = [], calls = []) =>
 
 /* waiter delay */
 {
-  const s = run([{ id: 1, orderNumber: "FANA-1", tableId: 1, tableName: "T1", status: "pending_waiter", createdAt: minAgo(6), updatedAt: minAgo(6) }]);
+  const s = run([{ id: 1, orderNumber: "TOTOT-1", tableId: 1, tableName: "T1", status: "pending_waiter", createdAt: minAgo(6), updatedAt: minAgo(6) }]);
   t("waiter 6m (>5) → DELAYED @WAITER", s.tickets[0].state === "DELAYED" && s.tickets[0].where === "WAITER");
 }
 /* kitchen delay + worst-item rollup (healthy kitchen item + delayed kitchen item) */
 {
   const s = run(
-    [{ id: 2, orderNumber: "FANA-2", tableId: 2, tableName: "T2", status: "confirmed", createdAt: minAgo(20), updatedAt: minAgo(1) }],
+    [{ id: 2, orderNumber: "TOTOT-2", tableId: 2, tableName: "T2", status: "confirmed", createdAt: minAgo(20), updatedAt: minAgo(1) }],
     [
       { ticketId: 2, name: "Kitfo", quantity: 1, stationName: "kitchen", stationStatus: "accepted", createdAt: minAgo(5) },
       { ticketId: 2, name: "Tibs", quantity: 1, stationName: "kitchen", stationStatus: "pending", createdAt: minAgo(16) },

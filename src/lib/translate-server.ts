@@ -35,10 +35,10 @@ const FETCH_TIMEOUT_MS = 9000;
 /* ─────────── in-process cache (hot path — skips the DB entirely) ─────────── */
 
 const globalForTx = globalThis as typeof globalThis & {
-  __fanaTxMem?: Map<string, string>;
+  __restaurantTxMem?: Map<string, string>;
 };
-const memCache: Map<string, string> = globalForTx.__fanaTxMem ?? new Map();
-globalForTx.__fanaTxMem = memCache;
+const memCache: Map<string, string> = globalForTx.__restaurantTxMem ?? new Map();
+globalForTx.__restaurantTxMem = memCache;
 
 const hashText = (text: string) =>
   createHash("sha256").update(text).digest("hex").slice(0, 48);
@@ -91,7 +91,7 @@ async function googleTranslateChunk(lang: string, texts: string[]): Promise<stri
   for (const text of texts) params.append("q", text);
   try {
     const res = await fetch(`${ENDPOINT}?${params.toString()}`, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FanaMenu/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; RestaurantMenuOS/1.0)" },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       cache: "no-store",
     });

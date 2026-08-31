@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Phone, MapPin, Clock } from "lucide-react";
+import { Phone, MapPin, Clock, Globe, Camera, Music2 } from "lucide-react";
 import { RESTAURANT } from "@/lib/restaurant";
 import { useLang } from "@/lib/i18n";
 import { MesobMark, TibebBand } from "@/components/cultural/Patterns";
@@ -52,6 +52,42 @@ export default function CulturalFooter({ onAdmin }: { onAdmin: () => void }) {
               <Clock className="h-4 w-4 text-gold/70" />
               {am ? contact.hoursNoteAm : contact.hoursNote}
             </p>
+
+            {/* Official social links — client-approved URLs only */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <a
+                href={contact.social.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-ivory-dim ring-1 ring-gold/20 transition hover:text-gold hover:ring-gold/50"
+              >
+                <Globe className="h-3.5 w-3.5 text-gold/80" /> Facebook
+              </a>
+              <a
+                href={contact.social.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-ivory-dim ring-1 ring-gold/20 transition hover:text-gold hover:ring-gold/50"
+              >
+                <Camera className="h-3.5 w-3.5 text-gold/80" /> Instagram
+              </a>
+              <a
+                href={contact.social.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-ivory-dim ring-1 ring-gold/20 transition hover:text-gold hover:ring-gold/50"
+              >
+                <Music2 className="h-3.5 w-3.5 text-gold/80" /> TikTok
+              </a>
+              <a
+                href={contact.social.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-ivory-dim ring-1 ring-gold/20 transition hover:text-gold hover:ring-gold/50"
+              >
+                <MapPin className="h-3.5 w-3.5 text-gold/80" /> Google Maps
+              </a>
+            </div>
           </div>
 
           {/* Operational links */}
