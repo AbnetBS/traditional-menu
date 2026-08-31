@@ -13,7 +13,7 @@ export default function TableRedirect() {
   }, [params.id, router]);
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center text-[#4E342E] text-sm font-bold">
+    <div className="tm-root min-h-screen flex items-center justify-center text-sm font-bold text-[#a98c5f]">
       Opening your table menu...
     </div>
   );
